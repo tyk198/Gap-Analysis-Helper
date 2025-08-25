@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field,asdict
-from typing import Dict, Any
+from typing import Dict, Any,List
 import os 
 import json
 
@@ -26,15 +26,20 @@ class plot_complete_FM_summary_settings:
         metadata={"tooltip": "Path to the folder containing complete FM summary files"}
     )
 
+   #states_to_compare: List = field(
+   #    default=["AfterFoilDetach","AfterLaserCut"],
+   #    metadata={"tooltip": "List of state to compare for plot summary"}
+   #)
+
 @dataclass
 class crop_FM_classify_top_bottom_Settings:
     raw_image_input_folder: str = field(
-        default=r'data',
+        default=r'data\IncomingState',
         metadata={"tooltip": "Path to the folder containing raw images for processing"}
     )
 
     image_output_folder: str = field(
-        default=r'Result\crop_to_classify_top_bottom\v2',
+        default=r'Result\crop_to_classify_top_bottom\incomingstate\v1',
         metadata={"tooltip": "Path to the folder containing cropped and combined images"}
     )
     min_fm_size: int = field(
@@ -42,19 +47,19 @@ class crop_FM_classify_top_bottom_Settings:
         metadata={"tooltip": "Minimum FM size to filter"}
     )
     max_fm_size: int = field(
-        default=2000,
+        default=700,
         metadata={"tooltip": "Maximum FM size to filter"}
     )
 
 @dataclass
 class crop_FM_check_background_fm_settings:
     raw_image_input_folder: str = field(
-        default=r'data',
+        default=r'data\IncomingState',
         metadata={"tooltip": "Path to the folder containing raw images for processing"}
     )
 
     image_output_folder: str = field(
-        default=r'Result\Crop_to_classify_background\v7',
+        default=r'Result\Crop_to_classify_background\incomingstate',
         metadata={"tooltip": "Path to the folder containing cropped and combined images"}
     )
 
@@ -71,10 +76,36 @@ class crop_FM_check_background_fm_settings:
 class DakarSettings:
 
     Excel_input_path: str = field(
-        default=r'CSV\AfterFoilDetach_AfterLaserCut.xlsx',
+        default=r'CSV\ManualDetach Gap Analysis.xlsx',
         metadata={"tooltip": "Path to the Excel file for Dakar data"}
 
     )
+
+    Excel_copy_path: str = field(
+        default=r'CSV\ManualDetach Gap Analysis_copy.xlsx',
+        metadata={"tooltip": "Path to the Excel file for Dakar data"}
+
+    )
+
+
+
+    worksheet_to_read: str = field(
+        #default='incomingfoil1',
+        default='copy data',
+
+        metadata={"tooltip": "The name of the worksheet to read"}
+
+    )
+
+    image_width: str = field(
+        default=66320,
+        metadata={"tooltip": "The width of image"}
+    )
+    image_height: str = field(
+        default=55080,
+        metadata={"tooltip": "The height of image"}
+    )
+
 
     crop_FM_classify_top_bottom :crop_FM_classify_top_bottom_Settings = field(
         default_factory=crop_FM_classify_top_bottom_Settings

@@ -5,6 +5,7 @@ import os
 from typing import Union, List, Optional
 import logging
 import tkinter as tk
+from decorator import log_time
 
 class ImageProcesser:
     def __init__(self, data):
@@ -18,6 +19,7 @@ class ImageProcesser:
         """
         
     @staticmethod
+    #@log_time
     def _read_image(file_path: Union[str, List[str]]) -> Union[np.ndarray, List[np.ndarray]]:
         """
         Reads an image or a list of images from the specified path(s) using OpenCV.
@@ -38,6 +40,7 @@ class ImageProcesser:
             return [cv2.imread(fp) for fp in file_path]
     
     @staticmethod
+    #@log_time
     def _combine_image(*images: 'np.ndarray', direction: str = "vertical") -> Optional['np.ndarray']:
         """
         Combines a sequence of images either vertically or horizontally.
@@ -128,6 +131,7 @@ class ImageProcesser:
         return combined_image
     
     @staticmethod
+    #@log_time
     def _resize_keep_aspect(image, target_width=None):
         """
         Resize an image to a target width while keeping aspect ratio.
@@ -157,6 +161,7 @@ class ImageProcesser:
         return resized_image
     
     @staticmethod
+    #@log_time
     def _overlay_text(text, image, position="top-left"):
         """
         Overlay text on an image with resolution-independent scaling.
@@ -212,6 +217,7 @@ class ImageProcesser:
 
 
     @staticmethod
+    #@log_time
     def _crop_image_base_on_coordinate(
         image_input: Union[np.ndarray, List[np.ndarray]],
         x: float,
@@ -365,6 +371,7 @@ class ImageProcesser:
         return combined_image
 
     @staticmethod
+    #@log_time
     def _save_image_to_folder(save_folder, plot_image, title):
         """
         Saves a plot image to a specified folder with a dynamically generated filename.
@@ -481,14 +488,16 @@ class ImageProcesser:
             if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) >= 1:
                 cv2.destroyWindow(window_name)
 
+
     @staticmethod
+    #@log_time
     def _match_white_red_image( row: pd.Series,raw_image_folder_path):
         try:
-            name_to_match = str(row['NAME']).strip()
+            foil_name = str(row['NAME']).strip()
             fov_to_match = int(row['FOV NUMBER'])
-            state = str(row['STATE']).strip()
+            state_name = str(row['STATE']).strip()
             with open("debug_log.txt", "a") as f:
-                f.write(f"Searching for: NAME='{name_to_match}', STATE='{state}', FOV='{fov_to_match}'\n")
+                f.write(f"Searching for: NAME='{foil_name}', STATE='{state_name}', FOV='{fov_to_match}'\n")
             #image_id = str(row['IMAGE ID']).strip()
         except (KeyError, ValueError):
             return None, None
@@ -499,9 +508,9 @@ class ImageProcesser:
                 if not filename.endswith('.jpeg'):
                     continue
                 full_filepath = os.path.join(root, filename)
-                if name_to_match not in full_filepath:
+                if foil_name not in full_filepath:
                     continue
-                if state not in full_filepath:
+                if state_name not in full_filepath:
                     continue
                 try:
                     stem = os.path.splitext(filename)[0]

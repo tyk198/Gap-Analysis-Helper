@@ -9,7 +9,7 @@ def main():
 
     start_time = datetime.now()
     
-    dakar.run_excel_openpyxl()
+    #dakar.generate_excel_column_info()
 
     dakar.crop_FM_classify_top_bottom(start_row=0, end_row=None)
     #dakar.crop_FM_check_background_fm(start_row=0, end_row=None)

@@ -6,7 +6,8 @@ from Plotter import Plotter
 from ExcelProcesser import ExcelProcesser
 import os
 import openpyxl
-
+from datetime import datetime
+import shutil
 class Dakar:
     """
     Orchestrates data loading and classification from a single MasterSettings object.
@@ -14,28 +15,37 @@ class Dakar:
     def __init__(self, settings: MasterSettings):
 
         self.settings = settings
-        self.data = pd.read_excel(self.settings.Dakar.Excel_input_path, sheet_name='ALL DATA').copy()
-        self.testing_excel_path = self.settings.Dakar.run_excel.input_file
-        self.wb = openpyxl.load_workbook(self.testing_excel_path,data_only=True)
+        self.worksheet_to_read  =self.settings.Dakar.worksheet_to_read
+
+        self.excel_path = self.settings.Dakar.Excel_input_path
+        self.excel_copy_path = self.settings.Dakar.Excel_copy_path
+
+
+        shutil.copy2(self.excel_path, self.excel_copy_path)
+
+        self.data = pd.read_excel(self.excel_copy_path, sheet_name= self.worksheet_to_read).copy()
+        self.wb = openpyxl.load_workbook(self.excel_copy_path,data_only=True)
 
         self.ImageProcesser = ImageProcesser(self.data)
         self.Plotter = Plotter(self.data,self.settings.plotter)
         self.ExcelProcesser = ExcelProcesser()
 
+    def generate_excel_column_info(self):
 
-    def run_excel_openpyxl(self):
         """
         Runs the Excel processing workflow using openpyxl.
         """
-        testing_excel_path = self.settings.Dakar.run_excel.input_file
-        target_ws= self.ExcelProcesser.read_and_copy_worksheet(self.wb)
+
+        image_width = self.settings.Dakar.image_width
+        image_height = self.settings.Dakar.image_height
+        target_ws= self.ExcelProcesser.read_and_copy_worksheet(self.wb,self.worksheet_to_read)
         self.ExcelProcesser.add_column_with_formula(target_ws, "ROW INDEX", '=VALUE(MID({cell},3,1))', {"cell": 1})
         self.ExcelProcesser.add_column_with_formula(target_ws, "COLUMN INDEX", '=VALUE(MID({cell},7,1))', {"cell": 1})
-        self.ExcelProcesser.add_column_with_formula(target_ws, "X PERCENTAGE", '=(({col_I}-1)*13264 + {col_C}) / 66320', {'col_I': 'I', 'col_C': 'C'})
-        self.ExcelProcesser.add_column_with_formula(target_ws, "Y PERCENTAGE", '=(({col_H}-1)*9180 + {col_D}) / 55080', {'col_H': 'H', 'col_D': 'D'})
+        self.ExcelProcesser.add_column_with_formula(target_ws, "X PERCENTAGE", '=(({col_I}-1)*13264 + {col_C}) / '+ str(image_width), {'col_I': 'I', 'col_C': 'C'})
+        self.ExcelProcesser.add_column_with_formula(target_ws, "Y PERCENTAGE", '=(({col_H}-1)*9180 + {col_D}) / '+ str(image_height), {'col_H': 'H', 'col_D': 'D'})
         self.ExcelProcesser.add_column_with_formula(target_ws, "FOV NUMBER", '=({col_H}-1)*5 + {col_I}', {'col_H': 'H', 'col_I': 'I'})
         self.ExcelProcesser.create_table(target_ws)
-        self.wb.save(testing_excel_path)
+        self.wb.save(self.excel_path)
 
 
     def crop_FM_classify_top_bottom(self, start_row=0, end_row=None):
@@ -44,19 +54,26 @@ class Dakar:
         output_folder = self.settings.Dakar.crop_FM_classify_top_bottom.image_output_folder
         min_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.min_fm_size
         max_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.max_fm_size
-        testing_excel_path = self.settings.Dakar.run_excel.input_file
 
         self.ExcelProcesser.add_column_header(target_ws,"Hyperlink")
         df_slice = self.data.iloc[start_row:end_row]
+
         for index, row in df_slice.iterrows():
+            start_time = datetime.now()
+
             fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["NAME"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"])
             if fm_size < min_fm_size or fm_size > max_fm_size :
                 continue
-            top_bottom = row['TOP BOTTOM']
+            if fov_number in [25, 29, 30]:
+                continue
+            end_time = datetime.now()
+            print(f'Total time is : {end_time - start_time}')
+
 
             #if top_bottom != "top" and top_bottom != "bottom":
             #    continue
             white_image, red_image = self.ImageProcesser._match_white_red_image(row,raw_image_folder_path)
+
             white_img , red_img = self.ImageProcesser._read_image([white_image,red_image])
             white_img   = self.ImageProcesser._crop_image_base_on_coordinate(white_img,x,y,fm_size*3)
             red_img   = self.ImageProcesser._crop_image_base_on_coordinate(red_img,x,y,fm_size*3)
@@ -72,11 +89,11 @@ class Dakar:
             self.ImageProcesser._save_image_to_folder(output_folder,combined_img ,file_name)
 
             image_absolute_path = os.path.abspath(image_absolute_path + ".png")
-            excel_absolute_path = os.path.abspath(self.testing_excel_path)
+            excel_absolute_path = os.path.abspath(self.excel_copy_path)
 
 
             self.ExcelProcesser.add_hyperlink_to_column(target_ws,image_absolute_path,excel_absolute_path,row_id)
-            self.wb.save(testing_excel_path)
+        self.wb.save(self.excel_copy_path)
             
 
     def crop_FM_check_background_fm(self, start_row=0, end_row=None):
@@ -120,20 +137,20 @@ class Dakar:
 
 
 
-
-
     def plot_complete_FM_summary(self):
 
         output_folder = self.settings.Dakar.plot_complete_FM_summary.output_folder
+        states_to_compare = self.settings.Dakar.plot_complete_FM_summary.states_to_compare
+
 
         tb_filter = ['top', 'bottom']
         names_to_plot = self.data['NAME'].unique()
         #states = ["BeforeFinalTest", "AfterFinalTest", "AfterFinalVI"]
-        states = ["AfterFoilDetach", "AfterLaserCut"]
+        states_to_compare = ["AfterFoilDetach", "AfterLaserCut"]
 
         for name in names_to_plot:
-            for i in range(len(states) - 1):
-                state1, state2 = states[i], states[i + 1]
+            for i in range(len(states_to_compare) - 1):
+                state1, state2 = states_to_compare[i], states_to_compare[i + 1]
 
                 before = self.Plotter.create_FM_position_plot(name,state1,tb_filter)
                 after = self.Plotter.create_FM_position_plot(name,state2,tb_filter)

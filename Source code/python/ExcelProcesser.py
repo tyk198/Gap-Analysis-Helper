@@ -9,6 +9,8 @@ from openpyxl.utils import get_column_letter
 from urllib.parse import quote
 import os 
 from openpyxl.worksheet.hyperlink import Hyperlink
+from decorator import log_time
+
 
 class ExcelProcesser:
     def __init__(self):
@@ -21,7 +23,7 @@ class ExcelProcesser:
             raw_image_folder_path: Path to raw images provided by owner class
         """
     @staticmethod
-    def read_and_copy_worksheet(wb):
+    def read_and_copy_worksheet(wb,worksheet_to_read):
         """
         Copies the 'TESTING' worksheet to a new 'copy data' worksheet
         in the specified Excel file, using openpyxl.
@@ -32,7 +34,7 @@ class ExcelProcesser:
         Returns:
             tuple: target_worksheet
         """
-        source_ws = wb['TESTING']
+        source_ws = wb[worksheet_to_read]
         #if 'copy data' in wb.sheetnames:
         #    wb.remove(wb['copy data'])
         target_ws = wb.copy_worksheet(source_ws)
@@ -113,6 +115,7 @@ class ExcelProcesser:
             worksheet[cell_ref] = formatted_formula
 
     @staticmethod
+    #@log_time
     def add_hyperlink_to_column(worksheet, image_absolute_path, excel_absolute_path, row_id):
         """
         Calculates a relative path and adds it as a hyperlink to a cell.
@@ -161,8 +164,8 @@ class ExcelProcesser:
             cell.value = "View"
             cell.hyperlink = encoded_path
             cell.style = "Hyperlink"
-            print(f"For row_id {row_id}:")
-            print(f"  - Calculated Relative Path: {relative_path}")
+            #print(f"For row_id {row_id}:")
+            #print(f"  - Calculated Relative Path: {relative_path}")
             print(f"  - Added Hyperlink: {encoded_path}")
         else:
             print(f"Could not find row with ROW ID: {row_id}")
