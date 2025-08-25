@@ -1,0 +1,26 @@
+# Ignore everything
+*
+
+# Do not ignore directories, so recursion still works
+!*/
+
+# Do not ignore Python files
+!*.py
+
+# Explicitly ignore the .venv folder
+.venv/
+/python/
+
+
+# Explicitly unignore selected files and folders
+!.gitignore
+!requirements.txt
+
+# Unignore .vscode folder and all files inside
+!.vscode/
+!.vscode/**
+
+# Unignore .cursor folder and all files inside
+!.cursor/
+!.cursor/**
+

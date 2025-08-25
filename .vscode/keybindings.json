@@ -1,0 +1,7 @@
+[
+    {
+      "key": "ctrl+x",
+      "command": "workbench.action.tasks.runTask",
+      "args": "Run Target Python File"
+    }
+  ]
