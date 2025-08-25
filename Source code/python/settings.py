@@ -34,7 +34,9 @@ class plot_complete_FM_summary_settings:
 @dataclass
 class crop_FM_classify_top_bottom_Settings:
     raw_image_input_folder: str = field(
-        default=r'data\IncomingState',
+        #default=r'data\IncomingState',
+        default=r'data',
+
         metadata={"tooltip": "Path to the folder containing raw images for processing"}
     )
 

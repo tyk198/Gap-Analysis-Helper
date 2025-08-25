@@ -25,7 +25,7 @@ class ExcelProcesser:
     @staticmethod
     def read_and_copy_worksheet(wb,worksheet_to_read):
         """
-        Copies the 'TESTING' worksheet to a new 'copy data' worksheet
+        Copies the worksheet_to_read  worksheet to a new 'copy data' worksheet
         in the specified Excel file, using openpyxl.
 
         Args:

@@ -45,7 +45,7 @@ class Dakar:
         self.ExcelProcesser.add_column_with_formula(target_ws, "Y PERCENTAGE", '=(({col_H}-1)*9180 + {col_D}) / '+ str(image_height), {'col_H': 'H', 'col_D': 'D'})
         self.ExcelProcesser.add_column_with_formula(target_ws, "FOV NUMBER", '=({col_H}-1)*5 + {col_I}', {'col_H': 'H', 'col_I': 'I'})
         self.ExcelProcesser.create_table(target_ws)
-        self.wb.save(self.excel_path)
+        self.wb.save(self.excel_copy_path)
 
 
     def crop_FM_classify_top_bottom(self, start_row=0, end_row=None):
@@ -54,21 +54,17 @@ class Dakar:
         output_folder = self.settings.Dakar.crop_FM_classify_top_bottom.image_output_folder
         min_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.min_fm_size
         max_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.max_fm_size
+        excluded_fovs = [25,26, 29, 30]
 
         self.ExcelProcesser.add_column_header(target_ws,"Hyperlink")
+
         df_slice = self.data.iloc[start_row:end_row]
+        mask_size = df_slice['FM SIZE'].between(min_fm_size, max_fm_size)
+        mask_fov = ~df_slice['FOV NUMBER'].isin(excluded_fovs)
+        df_to_process = df_slice[mask_size & mask_fov]
 
-        for index, row in df_slice.iterrows():
-            start_time = datetime.now()
-
+        for index, row in df_to_process.iterrows():
             fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["NAME"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"])
-            if fm_size < min_fm_size or fm_size > max_fm_size :
-                continue
-            if fov_number in [25, 29, 30]:
-                continue
-            end_time = datetime.now()
-            print(f'Total time is : {end_time - start_time}')
-
 
             #if top_bottom != "top" and top_bottom != "bottom":
             #    continue
