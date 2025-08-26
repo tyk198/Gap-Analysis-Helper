@@ -4,8 +4,6 @@ import os
 import json
 
 
-
-
 @dataclass
 class crop_FM_classify_top_bottom_Settings:
     raw_image_input_folder: str = field(
@@ -131,6 +129,15 @@ class DakarSettings:
     image_height: str = field(
         default=55080,
         metadata={"tooltip": "The height of image", "label": "Image Height"}
+    )
+
+    data: str = field(
+        default=r'data',
+        metadata={
+            "tooltip": "Path to the general data folder",
+            "setting_type": "folder",
+            "label": "Data Folder"
+        }
     )
 
     crop_FM_classify_top_bottom :crop_FM_classify_top_bottom_Settings = field(
