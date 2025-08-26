@@ -1,8 +1,9 @@
 import json
-from dataclasses import fields, is_dataclass, asdict
+from dataclasses import fields, is_dataclass, asdict, Field
 from typing import Any, Dict
 
-from PySide6.QtWidgets import QWidget, QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QWidget, QComboBox, QLineEdit, QTreeWidget, QTreeWidgetItem
+from PySide6.QtGui import QIntValidator, QDoubleValidator
 from PySide6.QtCore import Qt
 
 from settings import MasterSettings
@@ -33,6 +34,20 @@ class SettingsService:
         with open(file_path, 'w') as f:
             json.dump(asdict(settings), f, indent=4)
 
+    def _get_field_type_from_path(self, path: list[str]) -> Any:
+        """Inspects the MasterSettings dataclass to find the type of a nested field."""
+        current_type = MasterSettings
+        for part in path:
+            found = False
+            for f in fields(current_type):
+                if f.name == part:
+                    current_type = f.type
+                    found = True
+                    break
+            if not found:
+                return None
+        return current_type
+
     def build_dataclass_from_ui(self, widget_map: Dict[str, QWidget]) -> MasterSettings:
         """Reconstructs the MasterSettings object from the current UI values."""
         new_data = {}
@@ -42,7 +57,8 @@ class SettingsService:
 
             for i, part in enumerate(path):
                 if i == len(path) - 1:
-                    current_level[part] = self._get_value_from_widget(widget)
+                    field_type = self._get_field_type_from_path(path)
+                    current_level[part] = self._get_value_from_widget(widget, field_type)
                 else:
                     current_level = current_level.setdefault(part, {})
         
@@ -58,18 +74,27 @@ class SettingsService:
         
         return dict_to_dataclass(MasterSettings, new_data)
 
-    def _get_value_from_widget(self, widget: QWidget) -> Any:
+    def _get_value_from_widget(self, widget: QWidget, field_type: Any) -> Any:
         """Retrieves the value from a widget, converting it to the correct type."""
         if isinstance(widget, PathSelectorWidget):
             return widget.text()
         if isinstance(widget, QComboBox):
             return widget.currentText() == "True"
-        if isinstance(widget, QSpinBox):
-            return widget.value()
-        if isinstance(widget, QDoubleSpinBox):
-            return widget.value()
+        
         if isinstance(widget, QLineEdit):
-            return widget.text()
+            text = widget.text()
+            if field_type is int:
+                try:
+                    return int(text)
+                except (ValueError, TypeError):
+                    return 0
+            elif field_type is float:
+                try:
+                    return float(text)
+                except (ValueError, TypeError):
+                    return 0.0
+            return text # For regular string QLineEdits
+
         if isinstance(widget, QTreeWidget):
             return self._get_dict_from_tree(widget)
         return None
@@ -101,8 +126,6 @@ class SettingsService:
     def _parse_value(self, value_str: str) -> Any:
         """Tries to intelligently parse a string value from the GUI to a Python type."""
         try:
-            # Try to evaluate as a literal (handles lists, numbers, booleans)
             return json.loads(value_str)
         except (json.JSONDecodeError, TypeError):
-            # If it fails, return it as a plain string
             return value_str

@@ -2,6 +2,7 @@ from dataclasses import fields, is_dataclass
 from typing import Any, Dict
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIntValidator, QDoubleValidator
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QGroupBox,
     QTreeWidget, QTreeWidgetItem, QSpinBox, QDoubleSpinBox, QComboBox
@@ -64,14 +65,11 @@ class SettingsUIBuilder:
             widget.addItems(["True", "False"])
             widget.setCurrentText(str(value))
         elif isinstance(value, int):
-            widget = QSpinBox()
-            widget.setRange(-1000000, 1000000)
-            widget.setValue(value)
+            widget = QLineEdit(str(value))
+            widget.setValidator(QIntValidator())
         elif isinstance(value, float):
-            widget = QDoubleSpinBox()
-            widget.setDecimals(4)
-            widget.setRange(-1000000.0, 1000000.0)
-            widget.setValue(value)
+            widget = QLineEdit(str(value))
+            widget.setValidator(QDoubleValidator())
         elif isinstance(value, dict):
             widget = QTreeWidget()
             widget.setHeaderLabels(["Key", "Value"])
