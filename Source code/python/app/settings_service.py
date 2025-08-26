@@ -1,13 +1,12 @@
 import json
-from dataclasses import fields, is_dataclass, asdict, Field
+from dataclasses import fields, is_dataclass, asdict
 from typing import Any, Dict
 
 from PySide6.QtWidgets import QWidget, QComboBox, QLineEdit, QTreeWidget, QTreeWidgetItem
-from PySide6.QtGui import QIntValidator, QDoubleValidator
 from PySide6.QtCore import Qt
 
 from settings import MasterSettings
-from custom_widgets import PathSelectorWidget
+from custom_widgets import PathSelectorWidget, FoilsSelectorWidget
 
 class SettingsService:
     """Handles the business logic for settings management."""
@@ -52,7 +51,7 @@ class SettingsService:
         """Reconstructs the MasterSettings object from the current UI values."""
         new_data = {}
         for key, widget in widget_map.items():
-            path = key.split('.')[1:]  # Remove "MasterSettings." prefix
+            path = key.split('.')[1:]
             current_level = new_data
 
             for i, part in enumerate(path):
@@ -76,6 +75,8 @@ class SettingsService:
 
     def _get_value_from_widget(self, widget: QWidget, field_type: Any) -> Any:
         """Retrieves the value from a widget, converting it to the correct type."""
+        if isinstance(widget, FoilsSelectorWidget):
+            return widget.get_selected_as_dict()
         if isinstance(widget, PathSelectorWidget):
             return widget.text()
         if isinstance(widget, QComboBox):
@@ -84,16 +85,12 @@ class SettingsService:
         if isinstance(widget, QLineEdit):
             text = widget.text()
             if field_type is int:
-                try:
-                    return int(text)
-                except (ValueError, TypeError):
-                    return 0
+                try: return int(text)
+                except (ValueError, TypeError): return 0
             elif field_type is float:
-                try:
-                    return float(text)
-                except (ValueError, TypeError):
-                    return 0.0
-            return text # For regular string QLineEdits
+                try: return float(text)
+                except (ValueError, TypeError): return 0.0
+            return text
 
         if isinstance(widget, QTreeWidget):
             return self._get_dict_from_tree(widget)

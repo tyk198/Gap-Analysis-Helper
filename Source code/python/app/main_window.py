@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
 from settings import MasterSettings
 from settings_service import SettingsService
 from ui_builder import SettingsUIBuilder
+from custom_widgets import PathSelectorWidget, FoilsSelectorWidget
 
 class MainWindow(QMainWindow):
     """The main application window for the Settings Editor."""
@@ -20,12 +21,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Settings Editor")
         self.setGeometry(100, 100, 800, 600)
 
-        # Main container and layout
         self.main_widget = QWidget()
         self.main_layout = QVBoxLayout(self.main_widget)
         self.setCentralWidget(self.main_widget)
 
-        # Add a scroll area
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.main_layout.addWidget(self.scroll_area)
@@ -34,28 +33,23 @@ class MainWindow(QMainWindow):
         self.settings_layout = QVBoxLayout(self.settings_container)
         self.scroll_area.setWidget(self.settings_container)
 
-        # Create UI from the settings object
         self._build_ui()
-
-        # Add Save and Load buttons
         self._setup_buttons()
 
     def _build_ui(self):
         """Clears the existing UI and rebuilds it from the current settings object."""
-        # Clear old UI
         while self.settings_layout.count():
             child = self.settings_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
             elif child.layout():
-                # Also clear nested layouts
                 while child.layout().count():
                     nested_child = child.layout().takeAt(0)
                     if nested_child.widget():
                         nested_child.widget().deleteLater()
 
-        # Rebuild UI
         self.widget_map = self.ui_builder.build_ui(self.settings_obj, self.settings_layout)
+        self._connect_dependent_widgets()
 
     def _setup_buttons(self):
         """Creates and configures the Save and Load buttons."""
@@ -70,6 +64,20 @@ class MainWindow(QMainWindow):
         save_button.clicked.connect(self._save_settings)
         button_layout.addWidget(save_button)
 
+    def _connect_dependent_widgets(self):
+        """Connects widgets whose state depends on other widgets."""
+        data_path_widget = self.widget_map.get("MasterSettings.Dakar.data")
+        foils_selector = self.widget_map.get("MasterSettings.Dakar.plot_FM_summary.foils_to_plot")
+
+        if isinstance(data_path_widget, PathSelectorWidget) and isinstance(foils_selector, FoilsSelectorWidget):
+            initial_path = data_path_widget.text()
+            initial_selections = self.settings_obj.Dakar.plot_FM_summary.foils_to_plot
+            foils_selector.set_data_path(initial_path, initial_selections)
+
+            data_path_widget.line_edit.textChanged.connect(
+                lambda text: foils_selector.set_data_path(text, {})
+            )
+
     def _load_settings(self):
         """Loads settings from a JSON file and updates the GUI."""
         file_path, _ = QFileDialog.getOpenFileName(self, "Load Settings", "", "JSON Files (*.json)")
@@ -78,7 +86,7 @@ class MainWindow(QMainWindow):
 
         try:
             self.settings_obj = self.settings_service.load_from_json(file_path)
-            self._build_ui()  # Rebuild the UI with the new settings
+            self._build_ui()
             QMessageBox.information(self, "Success", f"Settings loaded from {file_path}")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load settings: {e}")

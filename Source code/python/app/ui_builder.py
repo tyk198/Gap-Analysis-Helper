@@ -5,10 +5,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator, QDoubleValidator
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QGroupBox,
-    QTreeWidget, QTreeWidgetItem, QSpinBox, QDoubleSpinBox, QComboBox
+    QTreeWidget, QTreeWidgetItem, QComboBox
 )
 
-from custom_widgets import PathSelectorWidget
+from custom_widgets import PathSelectorWidget, FoilsSelectorWidget
 
 class SettingsUIBuilder:
     """Builds the Qt UI from a settings dataclass."""
@@ -35,29 +35,32 @@ class SettingsUIBuilder:
             value = getattr(dc_instance, f.name)
             tooltip = f.metadata.get("tooltip", f.name)
             setting_type = f.metadata.get("setting_type")
-            label_text = f.metadata.get("label", f.name) # Use label, fallback to name
+            widget_type = f.metadata.get("widget_type")
+            label_text = f.metadata.get("label", f.name)
 
             if is_dataclass(value):
-                group_box = QGroupBox(label_text) # Use label for GroupBox
+                group_box = QGroupBox(label_text)
                 group_box.setToolTip(tooltip)
                 group_box_layout = QVBoxLayout(group_box)
                 parent_layout.addWidget(group_box)
                 self._create_ui_from_dataclass(value, group_box_layout, key)
             else:
                 h_layout = QHBoxLayout()
-                label = QLabel(f"{label_text}:") # Use label for QLabel
+                label = QLabel(f"{label_text}:")
                 label.setToolTip(tooltip)
                 h_layout.addWidget(label)
 
-                widget = self._create_widget_for_value(value, tooltip, setting_type)
+                widget = self._create_widget_for_value(value, tooltip, setting_type, widget_type)
                 self.widget_map[key] = widget
                 h_layout.addWidget(widget, 1)
                 parent_layout.addLayout(h_layout)
 
-    def _create_widget_for_value(self, value: Any, tooltip: str, setting_type: str | None) -> QWidget:
+    def _create_widget_for_value(self, value: Any, tooltip: str, setting_type: str | None, widget_type: str | None) -> QWidget:
         """Creates an appropriate widget for a given data type."""
         widget: QWidget
-        if setting_type in ["folder", "file"]:
+        if widget_type == "foils_selector":
+            widget = FoilsSelectorWidget()
+        elif setting_type in ["folder", "file"]:
             widget = PathSelectorWidget(selection_mode=setting_type)
             widget.setText(str(value))
         elif isinstance(value, bool):
@@ -71,12 +74,11 @@ class SettingsUIBuilder:
             widget = QLineEdit(str(value))
             widget.setValidator(QDoubleValidator())
         elif isinstance(value, dict):
+            # Fallback for other dicts that are not the foils selector
             widget = QTreeWidget()
             widget.setHeaderLabels(["Key", "Value"])
-            widget.setAlternatingRowColors(True)
             self._populate_tree_from_dict(widget, value)
             widget.expandAll()
-            widget.setMinimumHeight(200)
         else:
             widget = QLineEdit(str(value))
 

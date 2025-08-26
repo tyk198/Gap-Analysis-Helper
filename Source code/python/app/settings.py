@@ -82,7 +82,7 @@ class plot_FM_summary_settings:
             "IncomingState": ["incomingfoil1","incomingfoil2","incomingfoil3","incomingfoil4","incomingfoil5"],
             "ManualDetachState": ["ManualDetach1","ManualDetach2","ManualDetach3","ManualDetach4","ManualDetach5"]
         },
-        metadata={"label": "Foils to Plot"}
+        metadata={"label": "Foils to Plot", "widget_type": "foils_selector"}
     )
 
 @dataclass
@@ -132,7 +132,7 @@ class DakarSettings:
     )
 
     data: str = field(
-        default=r'data',
+        default=r'data/Raw data',
         metadata={
             "tooltip": "Path to the general data folder",
             "setting_type": "folder",
