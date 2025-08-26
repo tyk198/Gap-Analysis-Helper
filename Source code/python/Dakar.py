@@ -8,6 +8,8 @@ import os
 import openpyxl
 from datetime import datetime
 import shutil
+
+
 class Dakar:
     """
     Orchestrates data loading and classification from a single MasterSettings object.
@@ -21,7 +23,7 @@ class Dakar:
         self.excel_copy_path = self.settings.Dakar.Excel_copy_path
 
 
-        shutil.copy2(self.excel_path, self.excel_copy_path)
+        #shutil.copy2(self.excel_path, self.excel_copy_path)
 
         self.data = pd.read_excel(self.excel_copy_path, sheet_name= self.worksheet_to_read).copy()
         self.wb = openpyxl.load_workbook(self.excel_copy_path,data_only=True)
@@ -66,8 +68,6 @@ class Dakar:
         for index, row in df_to_process.iterrows():
             fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["NAME"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"])
 
-            #if top_bottom != "top" and top_bottom != "bottom":
-            #    continue
             white_image, red_image = self.ImageProcesser._match_white_red_image(row,raw_image_folder_path)
 
             white_img , red_img = self.ImageProcesser._read_image([white_image,red_image])
@@ -93,20 +93,21 @@ class Dakar:
             
 
     def crop_FM_check_background_fm(self, start_row=0, end_row=None):
+        target_ws  = self.wb["copy data"]
         raw_image_folder_path = self.settings.Dakar.crop_FM_check_background_fm.raw_image_input_folder
         output_folder = self.settings.Dakar.crop_FM_check_background_fm.image_output_folder
         min_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.min_fm_size
         max_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.max_fm_size
-        valid_options =  ["top","bottom"]
+
+        self.ExcelProcesser.add_column_header(target_ws,"BACKGROUND FM CHECK HYPERLINK")
 
         df_slice = self.data.iloc[start_row:end_row]
-        for index, row in df_slice.iterrows():
+        included = ["top","bottom"]
+        mask_of_top_bottom = df_slice['TOP BOTTOM'].isin(included)
+        df_to_process = df_slice[ mask_of_top_bottom]
+
+        for index, row in df_to_process.iterrows():
             fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["NAME"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"])
-            top_bottom = row['TOP BOTTOM']
-            if fm_size < min_fm_size or fm_size > max_fm_size :
-                continue
-            if top_bottom != "top" and top_bottom != "bottom":
-                continue
             
             images = self.ImageProcesser._match_all_name_white_images(row,raw_image_folder_path)
 
@@ -130,6 +131,13 @@ class Dakar:
             combined_img = self.ImageProcesser._overlay_text(title_string,final_combined_img,"top-left")
             #self.ImageProcesser.show_image(combined_img,window_name = title_string ,scale_resize  = 1)
             self.ImageProcesser._save_image_to_folder(output_folder,final_combined_img ,row_id +" "+ file_name)
+
+            image_absolute_path = os.path.join(output_folder, file_name)
+            image_absolute_path = os.path.abspath(image_absolute_path + ".png")
+            excel_absolute_path = os.path.abspath(self.excel_copy_path)
+            self.ExcelProcesser.add_hyperlink_to_column(target_ws,image_absolute_path,excel_absolute_path,row_id)
+        self.wb.save(self.excel_copy_path)
+
 
 
 

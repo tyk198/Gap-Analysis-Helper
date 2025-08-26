@@ -703,8 +703,6 @@ class ImageProcesser:
 
                 full_filepath = os.path.join(root, filename)
 
-                # --- Start Matching Criteria ---
-
                 # CHECK 1: The IMAGE ID must be in the path (based on your working function).
                 if image_id_to_match not in full_filepath:
                     continue

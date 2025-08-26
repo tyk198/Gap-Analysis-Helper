@@ -56,7 +56,7 @@ class crop_FM_classify_top_bottom_Settings:
 @dataclass
 class crop_FM_check_background_fm_settings:
     raw_image_input_folder: str = field(
-        default=r'data\IncomingState',
+        default=r'data\IncomingState\incomingfoil2',
         metadata={"tooltip": "Path to the folder containing raw images for processing"}
     )
 
@@ -73,6 +73,8 @@ class crop_FM_check_background_fm_settings:
         default=2000,
         metadata={"tooltip": "Maximum FM size to filter"}
     )
+
+
 
 @dataclass
 class DakarSettings:
