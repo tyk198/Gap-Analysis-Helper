@@ -31,16 +31,17 @@ class SettingsUIBuilder:
             value = getattr(dc_instance, f.name)
             tooltip = f.metadata.get("tooltip", f.name)
             setting_type = f.metadata.get("setting_type")
+            label_text = f.metadata.get("label", f.name) # Use label, fallback to name
 
             if is_dataclass(value):
-                group_box = QGroupBox(f.name)
+                group_box = QGroupBox(label_text) # Use label for GroupBox
                 group_box.setToolTip(tooltip)
                 group_box_layout = QVBoxLayout(group_box)
                 parent_layout.addWidget(group_box)
                 self._create_ui_from_dataclass(value, group_box_layout, key)
             else:
                 h_layout = QHBoxLayout()
-                label = QLabel(f"{f.name}:")
+                label = QLabel(f"{label_text}:") # Use label for QLabel
                 label.setToolTip(tooltip)
                 h_layout.addWidget(label)
 

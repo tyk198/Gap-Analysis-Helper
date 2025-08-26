@@ -9,48 +9,62 @@ import json
 @dataclass
 class crop_FM_classify_top_bottom_Settings:
     raw_image_input_folder: str = field(
-        #default=r'data\IncomingState',
         default=r'data',
-
-        metadata={"tooltip": "Path to the folder containing raw images for processing", "setting_type": "folder"}
+        metadata={
+            "tooltip": "Path to the folder containing raw images for processing", 
+            "setting_type": "folder",
+            "label": "Raw Image Input Folder"
+        }
     )
 
     image_output_folder: str = field(
         default=r'Result\crop_to_classify_top_bottom\incomingstate\v1',
-        metadata={"tooltip": "Path to the folder containing cropped and combined images", "setting_type": "folder"}
+        metadata={
+            "tooltip": "Path to the folder containing cropped and combined images", 
+            "setting_type": "folder",
+            "label": "Image Output Folder"
+        }
     )
     min_fm_size: int = field(
         default=100,
-        metadata={"tooltip": "Minimum FM size to filter"}
+        metadata={"tooltip": "Minimum FM size to filter", "label": "Min FM Size"}
     )
     max_fm_size: int = field(
         default=700,
-        metadata={"tooltip": "Maximum FM size to filter"}
+        metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size"}
     )
     excluded_fovs: List = field(
         default_factory=lambda: [25, 26, 29, 30],
-        metadata={"tooltip": "List of FOV numbers to exclude"}
+        metadata={"tooltip": "List of FOV numbers to exclude", "label": "Excluded FOVs"}
     )
 
 @dataclass
 class crop_FM_check_background_fm_settings:
     raw_image_input_folder: str = field(
         default=r'data',
-        metadata={"tooltip": "Path to the folder containing raw images for processing", "setting_type": "folder"}
+        metadata={
+            "tooltip": "Path to the folder containing raw images for processing", 
+            "setting_type": "folder",
+            "label": "Raw Image Input Folder"
+        }
     )
 
     image_output_folder: str = field(
         default=r'Result\Crop_to_classify_background\incomingstate',
-        metadata={"tooltip": "Path to the folder containing cropped and combined images", "setting_type": "folder"}
+        metadata={
+            "tooltip": "Path to the folder containing cropped and combined images", 
+            "setting_type": "folder",
+            "label": "Image Output Folder"
+        }
     )
 
     min_fm_size: int = field(
         default=100,
-        metadata={"tooltip": "Minimum FM size to filter"}
+        metadata={"tooltip": "Minimum FM size to filter", "label": "Min FM Size"}
     )
     max_fm_size: int = field(
         default=2000,
-        metadata={"tooltip": "Maximum FM size to filter"}
+        metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size"}
     )
 
 @dataclass
@@ -58,13 +72,19 @@ class plot_FM_summary_settings:
 
     image_output_folder: str = field(
         default=r'Result\FM_plot',
-        metadata={"tooltip": "Path to the folder containing cropped and combined images", "setting_type": "folder"}
+        metadata={
+            "tooltip": "Path to the folder containing cropped and combined images", 
+            "setting_type": "folder",
+            "label": "Image Output Folder"
+        }
     )
 
-    foils_to_plot : Dict =  field(default_factory = lambda: {
+    foils_to_plot : Dict =  field(
+        default_factory = lambda: {
             "IncomingState": ["incomingfoil1","incomingfoil2","incomingfoil3","incomingfoil4","incomingfoil5"],
             "ManualDetachState": ["ManualDetach1","ManualDetach2","ManualDetach3","ManualDetach4","ManualDetach5"]
-        }
+        },
+        metadata={"label": "Foils to Plot"}
     )
 
 @dataclass
@@ -72,79 +92,83 @@ class plot_complete_FM_summary_settings:
 
     output_folder: str = field(
         default=r'Result\SummaryPlot\V3',
-        metadata={"tooltip": "Path to the folder containing complete FM summary files", "setting_type": "folder"}
+        metadata={
+            "tooltip": "Path to the folder containing complete FM summary files", 
+            "setting_type": "folder",
+            "label": "Output Folder"
+        }
     )
-
-   #states_to_compare: List = field(
-   #    default=["AfterFoilDetach","AfterLaserCut"],
-   #    metadata={"tooltip": "List of state to compare for plot summary"}
-   #)
-
 
 @dataclass
 class DakarSettings:
 
     Excel_input_path: str = field(
         default=r'CSV\ManualDetach Gap Analysis.xlsx',
-        metadata={"tooltip": "Path to the Excel file for Dakar data", "setting_type": "file"}
-
+        metadata={
+            "tooltip": "Path to the Excel file for Dakar data", 
+            "setting_type": "file",
+            "label": "Excel Input Path"
+        }
     )
 
     Excel_copy_path: str = field(
         default=r'CSV\ManualDetach Gap Analysis_copy.xlsx',
-        metadata={"tooltip": "Path to the Excel file for Dakar data", "setting_type": "file"}
-
+        metadata={
+            "tooltip": "Path to the Excel file for Dakar data", 
+            "setting_type": "file",
+            "label": "Excel Copy Path"
+        }
     )
     worksheet_to_read: str = field(
-        #default='incomingfoil1',
         default='copy data2',
-
-        metadata={"tooltip": "The name of the worksheet to read"}
-
+        metadata={"tooltip": "The name of the worksheet to read", "label": "Worksheet to Read"}
     )
 
     image_width: str = field(
         default=66320,
-        metadata={"tooltip": "The width of image"}
+        metadata={"tooltip": "The width of image", "label": "Image Width"}
     )
     image_height: str = field(
         default=55080,
-        metadata={"tooltip": "The height of image"}
+        metadata={"tooltip": "The height of image", "label": "Image Height"}
     )
 
-
     crop_FM_classify_top_bottom :crop_FM_classify_top_bottom_Settings = field(
-        default_factory=crop_FM_classify_top_bottom_Settings
+        default_factory=crop_FM_classify_top_bottom_Settings,
+        metadata={"label": "Crop for Top/Bottom Classification"}
     )
 
     crop_FM_check_background_fm:crop_FM_check_background_fm_settings = field(
-        default_factory=crop_FM_check_background_fm_settings
+        default_factory=crop_FM_check_background_fm_settings,
+        metadata={"label": "Crop for Background FM Check"}
     )
 
     plot_compare_FM_summary :plot_complete_FM_summary_settings = field(
-        default_factory=plot_complete_FM_summary_settings
+        default_factory=plot_complete_FM_summary_settings,
+        metadata={"label": "Plot Complete FM Summary"}
     )
 
     plot_FM_summary: plot_FM_summary_settings = field(
-        default_factory=plot_FM_summary_settings
-
+        default_factory=plot_FM_summary_settings,
+        metadata={"label": "Plot FM Summary"}
     )
-
-
-    
 
 @dataclass
 class PlotterSettings:
     background_image_path: str = field(
         default='data/original_resize.jpg',
-        metadata={"tooltip": "Path to the background image for plots", "setting_type": "file"}
+        metadata={
+            "tooltip": "Path to the background image for plots", 
+            "setting_type": "file",
+            "label": "Background Image Path"
+        }
     )
     figure: Dict[str, Any] = field(
         default_factory=lambda: {
             "figsize": [17, 12],
             "margin_left": 0.15
         },
-        metadata={"tooltip": "Figure settings (e.g., size, margins)"}
+        metadata={"tooltip": "Figure settings (e.g., size, margins)", "label": "Figure"}
     )
     legend: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -154,7 +178,7 @@ class PlotterSettings:
             "title": "Legend",
             "title_fontsize": 14
         },
-        metadata={"tooltip": "Legend settings (e.g., location, font size)"}
+        metadata={"tooltip": "Legend settings (e.g., location, font size)", "label": "Legend"}
     )
     points: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -162,7 +186,7 @@ class PlotterSettings:
             "bottom_color": "blue",
             "top_color": "red"
         },
-        metadata={"tooltip": "Point settings (e.g., marker size, colors)"}
+        metadata={"tooltip": "Point settings (e.g., marker size, colors)", "label": "Points"}
     )
     shape_mapping: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -173,7 +197,7 @@ class PlotterSettings:
             "octagon": {"label": "500-600", "marker": "8", "min_size": 500, "max_size": 600},
             "other": {"label": " >600", "marker": "o", "min_size": None, "max_size": None}
         },
-        metadata={"tooltip": "Mapping of shapes to plot properties"}
+        metadata={"tooltip": "Mapping of shapes to plot properties", "label": "Shape Mapping"}
     )
     summary_text: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -185,16 +209,18 @@ class PlotterSettings:
                 "facecolor": "white"
             }
         },
-        metadata={"tooltip": "Summary text settings (e.g., location, font size)"}
+        metadata={"tooltip": "Summary text settings (e.g., location, font size)", "label": "Summary Text"}
     )
 
 @dataclass
 class MasterSettings:
     Dakar: DakarSettings = field(
-        default_factory=DakarSettings
+        default_factory=DakarSettings,
+        metadata={"label": "Dakar Settings"}
     )
     plotter: PlotterSettings = field(
-        default_factory=PlotterSettings
+        default_factory=PlotterSettings,
+        metadata={"label": "Plotter Settings"}
     )
 
 
