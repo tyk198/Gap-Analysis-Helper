@@ -5,7 +5,7 @@ import os
 from typing import Union, List, Optional
 import logging
 import tkinter as tk
-from decorator import log_time
+#from .decorator import log_time
 
 class ImageProcesser:
     def __init__(self, data):

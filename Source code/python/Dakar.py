@@ -30,6 +30,61 @@ class Dakar:
         self.ExcelProcesser = ExcelProcesser()
 
 
+    def get_and_combine_csvs(self):
+        """
+        Finds and combines CSV files based on the foils_to_plot setting.
+        """
+        foils_to_plot = self.settings.Dakar.foils_to_plot
+        data_path = self.settings.Dakar.data
+        output_folder = os.path.join("Result", "Combined_CSVs")
+        os.makedirs(output_folder, exist_ok=True)
+
+        all_dfs = []
+
+        for state, foils in foils_to_plot.items():
+            state_path = os.path.join(data_path, state)
+            if not os.path.isdir(state_path):
+                print(f"Warning: Directory for state '{state}' not found at '{state_path}'")
+                continue
+
+            for foil in foils:
+                foil_path = os.path.join(state_path, foil)
+                if not os.path.isdir(foil_path):
+                    print(f"Warning: Directory for foil '{foil}' not found at '{foil_path}'")
+                    continue
+
+                csv_files = []
+                for root, _, files in os.walk(foil_path):
+                    for file in files:
+                        if file.endswith('.csv'):
+                            csv_files.append(os.path.join(root, file))
+
+                if not csv_files:
+                    print(f"Warning: No CSV file found for state '{state}', foil '{foil}' in '{foil_path}'")
+                    continue
+
+                if len(csv_files) > 1:
+                    print(f"Warning: More than one CSV file found for state '{state}', foil '{foil}' in '{foil_path}'. Skipping.")
+                    continue
+                
+                df = pd.read_csv(csv_files[0], header=None)
+                df['STATE'] = state
+                df['FOIL'] = foil
+                all_dfs.append(df)
+
+        if not all_dfs:
+            print("No CSV files found to combine.")
+            return
+
+        combined_df = pd.concat(all_dfs, ignore_index=True)
+        combined_df.columns = ["FOV", "FM SIZE", "POS X", "POS Y", "STATE", "FOIL"]
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"combined_data_{timestamp}.csv"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        combined_df.to_csv(output_path, index=False)
+        print(f"Successfully combined {len(all_dfs)} CSV files into '{output_path}'")
 
     def generate_excel_column_info(self):
 
@@ -169,3 +224,4 @@ class Dakar:
             for foil in foils:
                 generated_plot = self.Plotter.create_FM_position_plot(state,foil)
                 self.ImageProcesser._save_image_to_folder(output_folder,generated_plot[0],state + " " + foil + ' plot')
+

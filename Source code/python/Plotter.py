@@ -3,7 +3,7 @@ from matplotlib.lines import Line2D
 from matplotlib import pyplot as plt
 import cv2
 from scipy.spatial import KDTree
-from settings import PlotterSettings
+from app.settings import PlotterSettings
 
 
 class Plotter:
