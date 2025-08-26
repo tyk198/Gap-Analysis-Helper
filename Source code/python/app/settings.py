@@ -12,12 +12,12 @@ class crop_FM_classify_top_bottom_Settings:
         #default=r'data\IncomingState',
         default=r'data',
 
-        metadata={"tooltip": "Path to the folder containing raw images for processing"}
+        metadata={"tooltip": "Path to the folder containing raw images for processing", "setting_type": "folder"}
     )
 
     image_output_folder: str = field(
         default=r'Result\crop_to_classify_top_bottom\incomingstate\v1',
-        metadata={"tooltip": "Path to the folder containing cropped and combined images"}
+        metadata={"tooltip": "Path to the folder containing cropped and combined images", "setting_type": "folder"}
     )
     min_fm_size: int = field(
         default=100,
@@ -36,12 +36,12 @@ class crop_FM_classify_top_bottom_Settings:
 class crop_FM_check_background_fm_settings:
     raw_image_input_folder: str = field(
         default=r'data',
-        metadata={"tooltip": "Path to the folder containing raw images for processing"}
+        metadata={"tooltip": "Path to the folder containing raw images for processing", "setting_type": "folder"}
     )
 
     image_output_folder: str = field(
         default=r'Result\Crop_to_classify_background\incomingstate',
-        metadata={"tooltip": "Path to the folder containing cropped and combined images"}
+        metadata={"tooltip": "Path to the folder containing cropped and combined images", "setting_type": "folder"}
     )
 
     min_fm_size: int = field(
@@ -58,7 +58,7 @@ class plot_FM_summary_settings:
 
     image_output_folder: str = field(
         default=r'Result\FM_plot',
-        metadata={"tooltip": "Path to the folder containing cropped and combined images"}
+        metadata={"tooltip": "Path to the folder containing cropped and combined images", "setting_type": "folder"}
     )
 
     foils_to_plot : Dict =  field(default_factory = lambda: {
@@ -72,7 +72,7 @@ class plot_complete_FM_summary_settings:
 
     output_folder: str = field(
         default=r'Result\SummaryPlot\V3',
-        metadata={"tooltip": "Path to the folder containing complete FM summary files"}
+        metadata={"tooltip": "Path to the folder containing complete FM summary files", "setting_type": "folder"}
     )
 
    #states_to_compare: List = field(
@@ -86,13 +86,13 @@ class DakarSettings:
 
     Excel_input_path: str = field(
         default=r'CSV\ManualDetach Gap Analysis.xlsx',
-        metadata={"tooltip": "Path to the Excel file for Dakar data"}
+        metadata={"tooltip": "Path to the Excel file for Dakar data", "setting_type": "file"}
 
     )
 
     Excel_copy_path: str = field(
         default=r'CSV\ManualDetach Gap Analysis_copy.xlsx',
-        metadata={"tooltip": "Path to the Excel file for Dakar data"}
+        metadata={"tooltip": "Path to the Excel file for Dakar data", "setting_type": "file"}
 
     )
     worksheet_to_read: str = field(
@@ -137,7 +137,7 @@ class DakarSettings:
 class PlotterSettings:
     background_image_path: str = field(
         default='data/original_resize.jpg',
-        metadata={"tooltip": "Path to the background image for plots"}
+        metadata={"tooltip": "Path to the background image for plots", "setting_type": "file"}
     )
     figure: Dict[str, Any] = field(
         default_factory=lambda: {

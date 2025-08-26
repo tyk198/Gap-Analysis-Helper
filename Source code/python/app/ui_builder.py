@@ -7,6 +7,8 @@ from PySide6.QtWidgets import (
     QTreeWidget, QTreeWidgetItem, QSpinBox, QDoubleSpinBox, QComboBox
 )
 
+from custom_widgets import PathSelectorWidget
+
 class SettingsUIBuilder:
     """Builds the Qt UI from a settings dataclass."""
 
@@ -28,6 +30,7 @@ class SettingsUIBuilder:
             key = f"{base_key}.{f.name}"
             value = getattr(dc_instance, f.name)
             tooltip = f.metadata.get("tooltip", f.name)
+            setting_type = f.metadata.get("setting_type")
 
             if is_dataclass(value):
                 group_box = QGroupBox(f.name)
@@ -41,15 +44,18 @@ class SettingsUIBuilder:
                 label.setToolTip(tooltip)
                 h_layout.addWidget(label)
 
-                widget = self._create_widget_for_value(value, tooltip)
+                widget = self._create_widget_for_value(value, tooltip, setting_type)
                 self.widget_map[key] = widget
                 h_layout.addWidget(widget, 1)
                 parent_layout.addLayout(h_layout)
 
-    def _create_widget_for_value(self, value: Any, tooltip: str) -> QWidget:
+    def _create_widget_for_value(self, value: Any, tooltip: str, setting_type: str | None) -> QWidget:
         """Creates an appropriate widget for a given data type."""
         widget: QWidget
-        if isinstance(value, bool):
+        if setting_type in ["folder", "file"]:
+            widget = PathSelectorWidget(selection_mode=setting_type)
+            widget.setText(str(value))
+        elif isinstance(value, bool):
             widget = QComboBox()
             widget.addItems(["True", "False"])
             widget.setCurrentText(str(value))

@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget, QComboBox, QSpinBox, QDoubleSpinBox, QLin
 from PySide6.QtCore import Qt
 
 from settings import MasterSettings
+from custom_widgets import PathSelectorWidget
 
 class SettingsService:
     """Handles the business logic for settings management."""
@@ -59,6 +60,8 @@ class SettingsService:
 
     def _get_value_from_widget(self, widget: QWidget) -> Any:
         """Retrieves the value from a widget, converting it to the correct type."""
+        if isinstance(widget, PathSelectorWidget):
+            return widget.text()
         if isinstance(widget, QComboBox):
             return widget.currentText() == "True"
         if isinstance(widget, QSpinBox):
