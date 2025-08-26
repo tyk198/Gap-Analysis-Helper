@@ -221,5 +221,6 @@ def save_settings_to_json(settings: MasterSettings = None, file_path: str = r'So
     os.makedirs(os.path.dirname(file_path) or '.', exist_ok=True)
     with open(file_path, 'w') as f:
         json.dump(asdict(settings), f, indent=4)
+    print('Succesfully saved json')
 
 save_settings_to_json()
