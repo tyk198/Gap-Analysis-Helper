@@ -40,7 +40,6 @@ class PathSelectorWidget(QWidget):
 
 
 class FoilsSelectorWidget(QWidget):
-    # ... (rest of the class is unchanged) ...
     """A tree-based widget to select folders and subfolders."""
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
@@ -53,6 +52,7 @@ class FoilsSelectorWidget(QWidget):
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels(["Folders"])
         self.tree.itemChanged.connect(self._handle_item_changed)
+        self.tree.setMinimumHeight(300) # Set a larger minimum height
         layout.addWidget(self.tree)
 
         self.refresh_button = QPushButton("Refresh List")
@@ -161,6 +161,7 @@ class CollapsibleSection(QWidget):
         header_layout.setContentsMargins(4, 4, 4, 4)
 
         self.toggle_button = QLabel("▼")
+        self.toggle_button.setStyleSheet("color: #505050;") # Lighter color for the triangle
         self.title_label = QLabel(title)
         self.title_label.setStyleSheet("font-weight: bold;")
 

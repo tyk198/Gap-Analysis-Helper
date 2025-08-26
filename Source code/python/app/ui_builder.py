@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator, QDoubleValidator
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, 
-    QTreeWidget, QTreeWidgetItem, QComboBox
+    QTreeWidget, QTreeWidgetItem, QComboBox, QFrame
 )
 
 from custom_widgets import PathSelectorWidget, FoilsSelectorWidget, CollapsibleSection
@@ -20,7 +20,7 @@ class SettingsUIBuilder:
 
     def build_ui(self, settings_obj: Any, parent_layout: QVBoxLayout) -> Dict[str, QWidget]:
         self.widget_map.clear()
-        self._create_ui_from_dataclass(settings_obj, parent_layout, "MasterSettings", -1) # Start level at -1
+        self._create_ui_from_dataclass(settings_obj, parent_layout, "MasterSettings", -1)
         return self.widget_map
 
     def _create_ui_from_dataclass(self, dc_instance: Any, parent_layout: QVBoxLayout, base_key: str, level: int):
@@ -37,14 +37,19 @@ class SettingsUIBuilder:
             label_text = f.metadata.get("label", f.name)
 
             if is_dataclass(value):
-                # Only color sections inside the top level
-                color = SECTION_COLORS[level % len(SECTION_COLORS)] if level >= 0 else "transparent"
+                if level >= 0:  # Inner sections are collapsible and colored
+                    color = SECTION_COLORS[level % len(SECTION_COLORS)]
+                    section_container = CollapsibleSection(label_text, color)
+                    content_layout = section_container.contentLayout()
+                else:  # Top-level section is just a plain container
+                    section_container = QFrame()
+                    section_container.setFrameShape(QFrame.NoFrame)
+                    content_layout = QVBoxLayout(section_container)
+                    content_layout.setContentsMargins(0,0,0,0)
                 
-                section = CollapsibleSection(label_text, color)
-                section.setToolTip(tooltip)
-                parent_layout.addWidget(section)
-                # Pass the content layout of the new section for the recursive call
-                self._create_ui_from_dataclass(value, section.contentLayout(), key, level + 1)
+                section_container.setToolTip(tooltip)
+                parent_layout.addWidget(section_container)
+                self._create_ui_from_dataclass(value, content_layout, key, level + 1)
             else:
                 h_layout = QHBoxLayout()
                 label = QLabel(f"{label_text}:")
