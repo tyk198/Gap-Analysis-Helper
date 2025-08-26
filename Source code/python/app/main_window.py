@@ -67,11 +67,11 @@ class MainWindow(QMainWindow):
     def _connect_dependent_widgets(self):
         """Connects widgets whose state depends on other widgets."""
         data_path_widget = self.widget_map.get("MasterSettings.Dakar.data")
-        foils_selector = self.widget_map.get("MasterSettings.Dakar.plot_FM_summary.foils_to_plot")
+        foils_selector = self.widget_map.get("MasterSettings.Dakar.foils_to_plot")
 
         if isinstance(data_path_widget, PathSelectorWidget) and isinstance(foils_selector, FoilsSelectorWidget):
             initial_path = data_path_widget.text()
-            initial_selections = self.settings_obj.Dakar.plot_FM_summary.foils_to_plot
+            initial_selections = self.settings_obj.Dakar.foils_to_plot
             foils_selector.set_data_path(initial_path, initial_selections)
 
             data_path_widget.line_edit.textChanged.connect(

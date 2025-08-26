@@ -77,13 +77,7 @@ class plot_FM_summary_settings:
         }
     )
 
-    foils_to_plot : Dict =  field(
-        default_factory = lambda: {
-            "IncomingState": ["incomingfoil1","incomingfoil2","incomingfoil3","incomingfoil4","incomingfoil5"],
-            "ManualDetachState": ["ManualDetach1","ManualDetach2","ManualDetach3","ManualDetach4","ManualDetach5"]
-        },
-        metadata={"label": "Foils to Plot", "widget_type": "foils_selector"}
-    )
+
 
 @dataclass
 class plot_complete_FM_summary_settings:
@@ -138,6 +132,14 @@ class DakarSettings:
             "setting_type": "folder",
             "label": "Data Folder"
         }
+    )
+
+    foils_to_plot : Dict =  field(
+        default_factory = lambda: {
+            "IncomingState": ["incomingfoil1","incomingfoil2","incomingfoil3","incomingfoil4","incomingfoil5"],
+            "ManualDetachState": ["ManualDetach1","ManualDetach2","ManualDetach3","ManualDetach4","ManualDetach5"]
+        },
+        metadata={"label": "Foils to Plot", "widget_type": "foils_selector"}
     )
 
     crop_FM_classify_top_bottom :crop_FM_classify_top_bottom_Settings = field(
@@ -247,6 +249,8 @@ def load_settings_from_json(file_path: str = 'settings.json') -> MasterSettings:
     )
 
 
+
+'''
 def save_settings_to_json(settings: MasterSettings = None, file_path: str = r'Source code\json\default_settings.json') -> None:
     """Saves MasterSettings to a JSON file, using defaults if settings is None."""
     if settings is None:
@@ -255,5 +259,5 @@ def save_settings_to_json(settings: MasterSettings = None, file_path: str = r'So
     with open(file_path, 'w') as f:
         json.dump(asdict(settings), f, indent=4)
     print('Succesfully saved json')
+'''
 
-save_settings_to_json()

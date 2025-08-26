@@ -2,7 +2,7 @@ import os
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QLineEdit, QPushButton, QFileDialog, QVBoxLayout, 
-    QTreeWidget, QTreeWidgetItem
+    QTreeWidget, QTreeWidgetItem, QGroupBox
 )
 
 class PathSelectorWidget(QWidget):
@@ -90,20 +90,22 @@ class FoilsSelectorWidget(QWidget):
                 has_selected_child = False
                 all_children_selected = True
 
-                for subfolder_name in sorted(os.listdir(folder_path)):
-                    subfolder_path = os.path.join(folder_path, subfolder_name)
-                    if os.path.isdir(subfolder_path):
-                        child_item = QTreeWidgetItem(parent_item, [subfolder_name])
-                        child_item.setFlags(child_item.flags() | Qt.ItemIsUserCheckable)
-                        if subfolder_name in selected_subfolders:
-                            child_item.setCheckState(0, Qt.Checked)
-                            has_selected_child = True
-                        else:
-                            child_item.setCheckState(0, Qt.Unchecked)
-                            all_children_selected = False
+                subfolders = [d for d in sorted(os.listdir(folder_path)) if os.path.isdir(os.path.join(folder_path, d))]
+                if not subfolders:
+                    all_children_selected = False
+
+                for subfolder_name in subfolders:
+                    child_item = QTreeWidgetItem(parent_item, [subfolder_name])
+                    child_item.setFlags(child_item.flags() | Qt.ItemIsUserCheckable)
+                    if subfolder_name in selected_subfolders:
+                        child_item.setCheckState(0, Qt.Checked)
+                        has_selected_child = True
+                    else:
+                        child_item.setCheckState(0, Qt.Unchecked)
+                        all_children_selected = False
                 
                 if has_selected_child:
-                    if all_children_selected and parent_item.childCount() > 0:
+                    if all_children_selected:
                         parent_item.setCheckState(0, Qt.Checked)
                     else:
                         parent_item.setCheckState(0, Qt.PartiallyChecked)
@@ -130,18 +132,16 @@ class FoilsSelectorWidget(QWidget):
         """Handles check state changes for parent/child items."""
         if self._is_populating or column != 0:
             return
-
+        
+        self._is_populating = True
         # Update children if parent is checked/unchecked
         if item.childCount() > 0:
-            self._is_populating = True
             for i in range(item.childCount()):
                 item.child(i).setCheckState(0, item.checkState(0))
-            self._is_populating = False
 
         # Update parent if child is checked/unchecked
         parent = item.parent()
         if parent:
-            self._is_populating = True
             checked_count = 0
             for i in range(parent.childCount()):
                 if parent.child(i).checkState(0) == Qt.Checked:
@@ -153,4 +153,45 @@ class FoilsSelectorWidget(QWidget):
                 parent.setCheckState(0, Qt.Checked)
             else:
                 parent.setCheckState(0, Qt.PartiallyChecked)
-            self._is_populating = False
+        self._is_populating = False
+
+class CollapsibleGroupBox(QGroupBox):
+    """A custom group box that can be collapsed and colored."""
+    def __init__(self, title: str = "", color: str = "#FFFFFF", parent: QWidget = None):
+        super().__init__(title, parent)
+        self.setCheckable(True)
+        self.setChecked(True)
+
+        self.content_widget = QWidget()
+        self._content_layout = QVBoxLayout(self.content_widget)
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(self.content_widget)
+
+        self.toggled.connect(self.content_widget.setVisible)
+
+        self.setStyleSheet(f"""
+            QGroupBox {{
+                background-color: {color};
+                border: 1px solid gray;
+                border-radius: 5px;
+                margin-top: 1ex; 
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 0 3px;
+            }}
+            QGroupBox::indicator {{
+                width: 13px;
+                height: 13px;
+            }}
+            QGroupBox::indicator:unchecked {{
+                image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAFNJREFUOE9jZKAQMFKon2FhYPgP5T8Gf4F4GGgGrAGJElUaDAwM/gP5T4iB4f+fGCIYZAyQ4T8TjQyQ4T8TjQzQoYFhA2A+iG8AAN1jBwB2g1YxAAAAAElFTkSuQmCC); /* Right-pointing triangle */
+            }}
+            QGroupBox::indicator:checked {{
+                image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEtJREFUOE9jZKAQMFKon2FhYPgP5T8Gf4F4GGgGrAGJElUaDAwM/gP5T4iB4f+fGCIYZAyQ4T8TjQyQ4T8TjQzQoYFhA2A+iG8AAN1jBwB2g1YxAAAAAElFTkSuQmCC); /* Down-pointing triangle - replace with actual image data */
+            }}
+        """)
+
+    def contentLayout(self) -> QVBoxLayout:
+        return self._content_layout

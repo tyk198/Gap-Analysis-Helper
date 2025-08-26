@@ -8,7 +8,9 @@ from PySide6.QtWidgets import (
     QTreeWidget, QTreeWidgetItem, QComboBox
 )
 
-from custom_widgets import PathSelectorWidget, FoilsSelectorWidget
+from custom_widgets import PathSelectorWidget, FoilsSelectorWidget, CollapsibleGroupBox
+
+SECTION_COLORS = ["#E6F1F6", "#E6F6E8", "#F6F3E6", "#F6E6E6", "#F1E6F6", "#F6E6F1"]
 
 class SettingsUIBuilder:
     """Builds the Qt UI from a settings dataclass."""
@@ -22,10 +24,10 @@ class SettingsUIBuilder:
         Returns a map of setting keys to their corresponding widgets.
         """
         self.widget_map.clear()
-        self._create_ui_from_dataclass(settings_obj, parent_layout, "MasterSettings")
+        self._create_ui_from_dataclass(settings_obj, parent_layout, "MasterSettings", 0)
         return self.widget_map
 
-    def _create_ui_from_dataclass(self, dc_instance: Any, parent_layout: QVBoxLayout, base_key: str):
+    def _create_ui_from_dataclass(self, dc_instance: Any, parent_layout: QVBoxLayout, base_key: str, level: int):
         """Recursively generates UI elements for a dataclass instance."""
         for f in fields(dc_instance):
             if not f.metadata.get("visible_in_ui", True):
@@ -39,11 +41,11 @@ class SettingsUIBuilder:
             label_text = f.metadata.get("label", f.name)
 
             if is_dataclass(value):
-                group_box = QGroupBox(label_text)
+                color = SECTION_COLORS[level % len(SECTION_COLORS)]
+                group_box = CollapsibleGroupBox(label_text, color)
                 group_box.setToolTip(tooltip)
-                group_box_layout = QVBoxLayout(group_box)
                 parent_layout.addWidget(group_box)
-                self._create_ui_from_dataclass(value, group_box_layout, key)
+                self._create_ui_from_dataclass(value, group_box.contentLayout(), key, level + 1)
             else:
                 h_layout = QHBoxLayout()
                 label = QLabel(f"{label_text}:")
@@ -74,7 +76,6 @@ class SettingsUIBuilder:
             widget = QLineEdit(str(value))
             widget.setValidator(QDoubleValidator())
         elif isinstance(value, dict):
-            # Fallback for other dicts that are not the foils selector
             widget = QTreeWidget()
             widget.setHeaderLabels(["Key", "Value"])
             self._populate_tree_from_dict(widget, value)
