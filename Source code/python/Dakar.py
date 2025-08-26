@@ -92,6 +92,8 @@ class Dakar:
         
         combined_df['FOV NUMBER'] = (combined_df['ROW INDEX'] - 1) * 5 + combined_df['COLUMN INDEX']
 
+        combined_df['ROW ID'] = combined_df.index + 1
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_filename = f"combined_data_{timestamp}.csv"
         output_path = os.path.join(output_folder, output_filename)
