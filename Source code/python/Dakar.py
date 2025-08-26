@@ -32,7 +32,8 @@ class Dakar:
 
     def get_and_combine_csvs(self):
         """
-        Finds and combines CSV files based on the foils_to_plot setting.
+        Finds and combines CSV files based on the foils_to_plot setting,
+        and adds calculated columns.
         """
         foils_to_plot = self.settings.Dakar.foils_to_plot
         data_path = self.settings.Dakar.data
@@ -68,6 +69,7 @@ class Dakar:
                     continue
                 
                 df = pd.read_csv(csv_files[0], header=None)
+                df.columns = ["FOV", "FM SIZE", "POS X", "POS Y"]
                 df['STATE'] = state
                 df['FOIL'] = foil
                 all_dfs.append(df)
@@ -77,14 +79,25 @@ class Dakar:
             return
 
         combined_df = pd.concat(all_dfs, ignore_index=True)
-        combined_df.columns = ["FOV", "FM SIZE", "POS X", "POS Y", "STATE", "FOIL"]
+
+        # Calculations from generate_excel_column_info
+        image_width = int(self.settings.Dakar.image_width)
+        image_height = int(self.settings.Dakar.image_height)
+
+        combined_df['ROW INDEX'] = combined_df['FOV'].str[2].astype(int)
+        combined_df['COLUMN INDEX'] = combined_df['FOV'].str[6].astype(int)
         
+        combined_df['X PERCENTAGE'] = ((combined_df['COLUMN INDEX'] - 1) * 13264 + combined_df['POS X']) / image_width
+        combined_df['Y PERCENTAGE'] = ((combined_df['ROW INDEX'] - 1) * 9180 + combined_df['POS Y']) / image_height
+        
+        combined_df['FOV NUMBER'] = (combined_df['ROW INDEX'] - 1) * 5 + combined_df['COLUMN INDEX']
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_filename = f"combined_data_{timestamp}.csv"
         output_path = os.path.join(output_folder, output_filename)
         
         combined_df.to_csv(output_path, index=False)
-        print(f"Successfully combined {len(all_dfs)} CSV files into '{output_path}'")
+        print(f"Successfully combined {len(all_dfs)} CSV files with calculated columns into '{output_path}'")
 
     def generate_excel_column_info(self):
 
