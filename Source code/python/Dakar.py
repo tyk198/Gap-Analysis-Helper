@@ -1,6 +1,6 @@
 from numpy import full
 import pandas as pd
-from settings import MasterSettings
+from app.settings import MasterSettings
 from ImageProcesser import ImageProcesser
 from Plotter import Plotter
 from ExcelProcesser import ExcelProcesser
@@ -29,6 +29,8 @@ class Dakar:
         self.Plotter = Plotter(self.data,self.settings.plotter)
         self.ExcelProcesser = ExcelProcesser()
 
+
+
     def generate_excel_column_info(self):
 
         """
@@ -45,7 +47,6 @@ class Dakar:
         self.ExcelProcesser.add_column_with_formula(target_ws, "FOV NUMBER", '=({col_H}-1)*5 + {col_I}', {'col_H': 'H', 'col_I': 'I'})
         self.ExcelProcesser.create_table(target_ws)
         self.wb.save(self.excel_copy_path)
-
 
     def crop_FM_classify_top_bottom(self, start_row=0, end_row=None):
         target_ws  = self.wb[self.worksheet_to_read]
@@ -87,7 +88,6 @@ class Dakar:
 
             self.ExcelProcesser.add_hyperlink_to_column(target_ws,image_absolute_path,excel_absolute_path,row_id)
         self.wb.save(self.excel_copy_path)
-            
 
     def crop_FM_check_background_fm(self, start_row=0, end_row=None):
         target_ws  = self.wb[self.worksheet_to_read]
@@ -137,8 +137,6 @@ class Dakar:
             excel_absolute_path = os.path.abspath(self.excel_copy_path)
             self.ExcelProcesser.add_hyperlink_to_column(target_ws,image_absolute_path,excel_absolute_path,row_id,hyperlink_column_header)
         self.wb.save(self.excel_copy_path)
-
-
 
 
     def plot_compare_FM_summary(self):
