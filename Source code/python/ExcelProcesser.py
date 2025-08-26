@@ -116,7 +116,7 @@ class ExcelProcesser:
 
     @staticmethod
     #@log_time
-    def add_hyperlink_to_column(worksheet, image_absolute_path, excel_absolute_path, row_id):
+    def add_hyperlink_to_column(worksheet, image_absolute_path, excel_absolute_path, row_id,hyperlink_column_header):
         """
         Calculates a relative path and adds it as a hyperlink to a cell.
 
@@ -129,11 +129,11 @@ class ExcelProcesser:
 
         # --- Find Column Headers ---
         headers = {cell.value: cell.column_letter for cell in worksheet[1]}
-        hyperlink_col = headers.get("Hyperlink")
+        hyperlink_col = headers.get(hyperlink_column_header)
         row_id_col = headers.get("ROW ID")
 
         if not hyperlink_col or not row_id_col:
-            print("Error: 'Hyperlink' or 'ROW ID' column not found.")
+            print(f"{hyperlink_column_header} or 'ROW ID' column not found.")
             return
 
         # --- 1. Calculate the relative path ---
@@ -166,7 +166,7 @@ class ExcelProcesser:
             cell.style = "Hyperlink"
             #print(f"For row_id {row_id}:")
             #print(f"  - Calculated Relative Path: {relative_path}")
-            print(f"  - Added Hyperlink: {encoded_path}")
+            print(f"Added Hyperlink: {encoded_path}")
         else:
             print(f"Could not find row with ROW ID: {row_id}")
 

@@ -9,7 +9,6 @@ import openpyxl
 from datetime import datetime
 import shutil
 
-
 class Dakar:
     """
     Orchestrates data loading and classification from a single MasterSettings object.
@@ -22,8 +21,6 @@ class Dakar:
         self.excel_path = self.settings.Dakar.Excel_input_path
         self.excel_copy_path = self.settings.Dakar.Excel_copy_path
 
-
-        #shutil.copy2(self.excel_path, self.excel_copy_path)
 
         self.data = pd.read_excel(self.excel_copy_path, sheet_name= self.worksheet_to_read).copy()
         self.wb = openpyxl.load_workbook(self.excel_copy_path,data_only=True)
@@ -51,12 +48,12 @@ class Dakar:
 
 
     def crop_FM_classify_top_bottom(self, start_row=0, end_row=None):
-        target_ws  = self.wb["copy data"]
+        target_ws  = self.wb[self.worksheet_to_read]
         raw_image_folder_path = self.settings.Dakar.crop_FM_classify_top_bottom.raw_image_input_folder
         output_folder = self.settings.Dakar.crop_FM_classify_top_bottom.image_output_folder
         min_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.min_fm_size
         max_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.max_fm_size
-        excluded_fovs = [25,26, 29, 30]
+        excluded_fovs = self.settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs
 
         self.ExcelProcesser.add_column_header(target_ws,"Hyperlink")
 
@@ -93,13 +90,13 @@ class Dakar:
             
 
     def crop_FM_check_background_fm(self, start_row=0, end_row=None):
-        target_ws  = self.wb["copy data"]
+        target_ws  = self.wb[self.worksheet_to_read]
         raw_image_folder_path = self.settings.Dakar.crop_FM_check_background_fm.raw_image_input_folder
         output_folder = self.settings.Dakar.crop_FM_check_background_fm.image_output_folder
-        min_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.min_fm_size
-        max_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.max_fm_size
 
-        self.ExcelProcesser.add_column_header(target_ws,"BACKGROUND FM CHECK HYPERLINK")
+        
+        hyperlink_column_header = "BACKGROUND FM CHECK HYPERLINK"
+        self.ExcelProcesser.add_column_header(target_ws,hyperlink_column_header)
 
         df_slice = self.data.iloc[start_row:end_row]
         included = ["top","bottom"]
@@ -110,6 +107,9 @@ class Dakar:
             fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["NAME"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"])
             
             images = self.ImageProcesser._match_all_name_white_images(row,raw_image_folder_path)
+            if not images:
+                print(f"No images found for {state} {name} FOV NUMBER: {fov_number} ROW ID: {row_id} ")
+                continue
 
             images = self.ImageProcesser._read_image(images)
             zoomout_images   = self.ImageProcesser._crop_image_base_on_coordinate(images,x,y,fm_size * 3)
@@ -125,41 +125,49 @@ class Dakar:
 
 
 
-            title_string = f'{row_id}_{state}\nFOV: {fov}\nFOV Number: {fov_number}\nx: {x} y: {y}\nFMsize: {fm_size}'
-            file_name = f'{state} {fov} FOV Number_{fov_number} X_{x} Y_{y} FMsize_{fm_size}'
+            overlay_text = f'{row_id}_{state}\nFOV: {fov}\nFOV Number: {fov_number}\nx: {x} y: {y}\nFMsize: {fm_size}'
+            file_name = row_id + " " + f'{state} {fov} FOV Number {fov_number} X_{x} Y_{y} FMsize_{fm_size}'
 
-            combined_img = self.ImageProcesser._overlay_text(title_string,final_combined_img,"top-left")
+            combined_img = self.ImageProcesser._overlay_text(overlay_text,final_combined_img,"top-left")
             #self.ImageProcesser.show_image(combined_img,window_name = title_string ,scale_resize  = 1)
-            self.ImageProcesser._save_image_to_folder(output_folder,final_combined_img ,row_id +" "+ file_name)
+            self.ImageProcesser._save_image_to_folder(output_folder,final_combined_img ,file_name)
 
             image_absolute_path = os.path.join(output_folder, file_name)
             image_absolute_path = os.path.abspath(image_absolute_path + ".png")
             excel_absolute_path = os.path.abspath(self.excel_copy_path)
-            self.ExcelProcesser.add_hyperlink_to_column(target_ws,image_absolute_path,excel_absolute_path,row_id)
+            self.ExcelProcesser.add_hyperlink_to_column(target_ws,image_absolute_path,excel_absolute_path,row_id,hyperlink_column_header)
         self.wb.save(self.excel_copy_path)
 
 
 
 
-    def plot_complete_FM_summary(self):
+    def plot_compare_FM_summary(self):
 
-        output_folder = self.settings.Dakar.plot_complete_FM_summary.output_folder
-        states_to_compare = self.settings.Dakar.plot_complete_FM_summary.states_to_compare
+        output_folder = self.settings.Dakar.plot_compare_FM_summary.output_folder
+        states_to_compare = self.settings.Dakar.plot_compare_FM_summary.states_to_compare
 
-
-        tb_filter = ['top', 'bottom']
-        names_to_plot = self.data['NAME'].unique()
-        #states = ["BeforeFinalTest", "AfterFinalTest", "AfterFinalVI"]
+        foils_to_plot = self.data['NAME'].unique()
         states_to_compare = ["AfterFoilDetach", "AfterLaserCut"]
 
-        for name in names_to_plot:
+        for foil in foils_to_plot:
             for i in range(len(states_to_compare) - 1):
                 state1, state2 = states_to_compare[i], states_to_compare[i + 1]
 
-                before = self.Plotter.create_FM_position_plot(name,state1,tb_filter)
-                after = self.Plotter.create_FM_position_plot(name,state2,tb_filter)
-                generated_FM_changed_plots = self.Plotter.create_FM_change_plots(name, state1, state2)
+                before = self.Plotter.create_FM_position_plot(state1,foil)
+                after = self.Plotter.create_FM_position_plot(state2,foil)
+                generated_FM_changed_plots = self.Plotter.create_FM_change_plots(foil, state1, state2)
                 added,removed,stayed  = generated_FM_changed_plots
-                summary = self.Plotter.create_summary_plot(before,after,added,removed,stayed,name,state1,state2)
+                summary = self.Plotter.create_changed_summary_plot(before,after,added,removed,stayed,foil,state1,state2)
                 combined = self.ImageProcesser._combine_image_grid(before[0],after[0], summary,added[0],removed[0],stayed[0])
-                self.ImageProcesser._save_image_to_folder(output_folder,combined,name+' '+ state1+" to "+state2 + ' summary')
+                self.ImageProcesser._save_image_to_folder(output_folder,combined,foil+' '+ state1+" to "+state2 + ' summary')
+
+    def plot_FM_summary(self):
+
+        output_folder = self.settings.Dakar.plot_FM_summary.image_output_folder
+        foils_to_plot = self.settings.Dakar.plot_FM_summary.foils_to_plot
+        for state, foils in foils_to_plot.items():
+            print(f"State: {state}")
+            print(f"Foils is:  {foils}")
+            for foil in foils:
+                generated_plot = self.Plotter.create_FM_position_plot(state,foil)
+                self.ImageProcesser._save_image_to_folder(output_folder,generated_plot[0],state + " " + foil + ' plot')

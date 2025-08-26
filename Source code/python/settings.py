@@ -4,32 +4,7 @@ import os
 import json
 
 
-@dataclass
-class Run_Excel:
 
-    input_file: str = field(
-        default=r'CSV\AfterFoilDetach_AfterLaserCut_TESTING.xlsx',
-        metadata={"tooltip": "Path"}
-    )
-
-    output_file: str = field(
-        default=r'CSV\AfterFoilDetach_AfterLaserCut_TESTING.xlsx',
-        metadata={"tooltip": "Path "}
-    )
-
-
-@dataclass
-class plot_complete_FM_summary_settings:
-
-    output_folder: str = field(
-        default=r'Result\SummaryPlot\V3',
-        metadata={"tooltip": "Path to the folder containing complete FM summary files"}
-    )
-
-   #states_to_compare: List = field(
-   #    default=["AfterFoilDetach","AfterLaserCut"],
-   #    metadata={"tooltip": "List of state to compare for plot summary"}
-   #)
 
 @dataclass
 class crop_FM_classify_top_bottom_Settings:
@@ -52,11 +27,15 @@ class crop_FM_classify_top_bottom_Settings:
         default=700,
         metadata={"tooltip": "Maximum FM size to filter"}
     )
+    excluded_fovs: List = field(
+        default_factory=lambda: [25, 26, 29, 30],
+        metadata={"tooltip": "List of FOV numbers to exclude"}
+    )
 
 @dataclass
 class crop_FM_check_background_fm_settings:
     raw_image_input_folder: str = field(
-        default=r'data\IncomingState\incomingfoil2',
+        default=r'data',
         metadata={"tooltip": "Path to the folder containing raw images for processing"}
     )
 
@@ -74,6 +53,32 @@ class crop_FM_check_background_fm_settings:
         metadata={"tooltip": "Maximum FM size to filter"}
     )
 
+@dataclass
+class plot_FM_summary_settings:
+
+    image_output_folder: str = field(
+        default=r'Result\FM_plot',
+        metadata={"tooltip": "Path to the folder containing cropped and combined images"}
+    )
+
+    foils_to_plot : Dict =  field(default_factory = lambda: {
+            "IncomingState": ["incomingfoil1","incomingfoil2","incomingfoil3","incomingfoil4","incomingfoil5"],
+            "ManualDetachState": ["ManualDetach1","ManualDetach2","ManualDetach3","ManualDetach4","ManualDetach5"]
+        }
+    )
+
+@dataclass
+class plot_complete_FM_summary_settings:
+
+    output_folder: str = field(
+        default=r'Result\SummaryPlot\V3',
+        metadata={"tooltip": "Path to the folder containing complete FM summary files"}
+    )
+
+   #states_to_compare: List = field(
+   #    default=["AfterFoilDetach","AfterLaserCut"],
+   #    metadata={"tooltip": "List of state to compare for plot summary"}
+   #)
 
 
 @dataclass
@@ -90,12 +95,9 @@ class DakarSettings:
         metadata={"tooltip": "Path to the Excel file for Dakar data"}
 
     )
-
-
-
     worksheet_to_read: str = field(
         #default='incomingfoil1',
-        default='copy data',
+        default='copy data2',
 
         metadata={"tooltip": "The name of the worksheet to read"}
 
@@ -119,13 +121,16 @@ class DakarSettings:
         default_factory=crop_FM_check_background_fm_settings
     )
 
-    plot_complete_FM_summary :plot_complete_FM_summary_settings = field(
+    plot_compare_FM_summary :plot_complete_FM_summary_settings = field(
         default_factory=plot_complete_FM_summary_settings
     )
 
-    run_excel :Run_Excel = field(
-        default_factory=Run_Excel
+    plot_FM_summary: plot_FM_summary_settings = field(
+        default_factory=plot_FM_summary_settings
+
     )
+
+
     
 
 @dataclass

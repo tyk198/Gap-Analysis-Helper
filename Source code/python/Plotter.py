@@ -158,24 +158,17 @@ class Plotter:
         stay_points = data_after.loc[list(matched_after_indices)]
         return added_points, removed_points, stay_points
 
-    def create_FM_position_plot(self, name_filter, state_filter, top_bottom_filter):
+    def create_FM_position_plot(self,state,foil):
         """
         Filters data based on all criteria and tells the plotter to generate an image.
         The name_filter can be a single string or a list of strings.
         """
-        # Prepare the name filter to handle both string and list inputs
-        names_to_filter = name_filter
-        if isinstance(name_filter, str):
-            names_to_filter = [name_filter]
-
-        # A single, powerful filter that includes all criteria
         filtered_data = self.data[
-            (self.data['NAME'].isin(names_to_filter)) &
-            (self.data['STATE'] == state_filter) &
-            (self.data['TOP BOTTOM'].isin(top_bottom_filter))
+            (self.data['NAME'] == foil) &
+            (self.data['STATE'] == state)
         ]
 
-        plot_title = f"Name(s): {names_to_filter} | State: {state_filter}"
+        plot_title = f"State: {state} | Foil: {foil} |"
 
         return self._generate_plot(plot_title, filtered_data)
 
@@ -197,7 +190,7 @@ class Plotter:
             plots.append((plot_image, title, top, bottom))
         return plots
 
-    def create_summary_plot(self, before, after, added, removed, stayed, name, state1, state2):
+    def create_changed_summary_plot(self, before, after, added, removed, stayed, name, state1, state2):
         """
         Generates a single summary image with a text report and a refined 3-bar chart.
         The bar width is controlled, and the stacked bar has individual labels.

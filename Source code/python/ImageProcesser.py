@@ -727,5 +727,4 @@ class ImageProcesser:
 
                 # If a file passes all three checks, add it to the final list.
                 found_white_images.append(full_filepath)
-
         return found_white_images
