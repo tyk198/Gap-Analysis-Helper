@@ -8,7 +8,6 @@ def main():
     
     
     settings = MasterSettings()
-    settings = load_settings_from_json(r'Source code\json\settings_3.json')
     settings = load_settings_from_json(r'Source code\json\2.json')
 
 

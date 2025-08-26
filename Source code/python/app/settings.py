@@ -23,14 +23,6 @@ class crop_FM_classify_top_bottom_Settings:
             "label": "Image Output Folder"
         }
     )
-    min_fm_size: int = field(
-        default=100,
-        metadata={"tooltip": "Minimum FM size to filter", "label": "Min FM Size"}
-    )
-    max_fm_size: int = field(
-        default=700,
-        metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size"}
-    )
     excluded_fovs: List = field(
         default_factory=lambda: [25, 26, 29, 30],
         metadata={"tooltip": "List of FOV numbers to exclude", "label": "Excluded FOVs"}
@@ -54,15 +46,6 @@ class crop_FM_check_background_fm_settings:
             "setting_type": "folder",
             "label": "Image Output Folder"
         }
-    )
-
-    min_fm_size: int = field(
-        default=100,
-        metadata={"tooltip": "Minimum FM size to filter", "label": "Min FM Size"}
-    )
-    max_fm_size: int = field(
-        default=2000,
-        metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size"}
     )
 
 @dataclass
@@ -132,6 +115,15 @@ class DakarSettings:
             "setting_type": "folder",
             "label": "Data Folder"
         }
+    )
+
+    min_fm_size: int = field(
+        default=100,
+        metadata={"tooltip": "Minimum FM size to filter", "label": "Min FM Size"}
+    )
+    max_fm_size: int = field(
+        default=700,
+        metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size"}
     )
 
     foils_to_plot : Dict =  field(

@@ -9,6 +9,8 @@ import openpyxl
 from datetime import datetime
 import shutil
 
+
+
 class Dakar:
     """
     Orchestrates data loading and classification from a single MasterSettings object.
@@ -80,6 +82,10 @@ class Dakar:
 
         combined_df = pd.concat(all_dfs, ignore_index=True)
 
+        min_fm_size = self.settings.Dakar.min_fm_size
+        max_fm_size = self.settings.Dakar.max_fm_size
+        combined_df = combined_df[combined_df['FM SIZE'].between(min_fm_size, max_fm_size)]
+
         # Calculations from generate_excel_column_info
         image_width = int(self.settings.Dakar.image_width)
         image_height = int(self.settings.Dakar.image_height)
@@ -100,6 +106,8 @@ class Dakar:
         
         combined_df.to_csv(output_path, index=False)
         print(f"Successfully combined {len(all_dfs)} CSV files with calculated columns into '{output_path}'")
+
+
 
     def generate_excel_column_info(self):
 
@@ -122,19 +130,16 @@ class Dakar:
         target_ws  = self.wb[self.worksheet_to_read]
         raw_image_folder_path = self.settings.Dakar.crop_FM_classify_top_bottom.raw_image_input_folder
         output_folder = self.settings.Dakar.crop_FM_classify_top_bottom.image_output_folder
-        min_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.min_fm_size
-        max_fm_size = self.settings.Dakar.crop_FM_classify_top_bottom.max_fm_size
         excluded_fovs = self.settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs
 
         self.ExcelProcesser.add_column_header(target_ws,"Hyperlink")
 
         df_slice = self.data.iloc[start_row:end_row]
-        mask_size = df_slice['FM SIZE'].between(min_fm_size, max_fm_size)
         mask_fov = ~df_slice['FOV NUMBER'].isin(excluded_fovs)
-        df_to_process = df_slice[mask_size & mask_fov]
+        df_to_process = df_slice[mask_fov]
 
         for index, row in df_to_process.iterrows():
-            fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["NAME"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"])
+            fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["NAME"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"]) 
 
             white_image, red_image = self.ImageProcesser._match_white_red_image(row,raw_image_folder_path)
 
