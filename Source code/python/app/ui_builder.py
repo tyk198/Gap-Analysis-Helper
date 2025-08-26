@@ -27,6 +27,9 @@ class SettingsUIBuilder:
     def _create_ui_from_dataclass(self, dc_instance: Any, parent_layout: QVBoxLayout, base_key: str):
         """Recursively generates UI elements for a dataclass instance."""
         for f in fields(dc_instance):
+            if not f.metadata.get("visible_in_ui", True):
+                continue
+
             key = f"{base_key}.{f.name}"
             value = getattr(dc_instance, f.name)
             tooltip = f.metadata.get("tooltip", f.name)

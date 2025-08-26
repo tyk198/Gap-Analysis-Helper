@@ -216,11 +216,11 @@ class PlotterSettings:
 class MasterSettings:
     Dakar: DakarSettings = field(
         default_factory=DakarSettings,
-        metadata={"label": "Dakar Settings"}
+        metadata={"label": "Dakar Settings", "visible_in_ui": True}
     )
     plotter: PlotterSettings = field(
         default_factory=PlotterSettings,
-        metadata={"label": "Plotter Settings"}
+        metadata={"visible_in_ui": False}
     )
 
 
