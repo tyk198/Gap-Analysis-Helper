@@ -16,9 +16,8 @@ def main():
     start_time = datetime.now()
     
     dakar.get_and_combine_csvs()
-    #dakar.generate_excel_column_info()
+    dakar.crop_FM_classify_top_bottom_from_csv(start_row=0, end_row=None)
 
-    #dakar.crop_FM_classify_top_bottom(start_row=0, end_row=None)
     #dakar.crop_FM_check_background_fm(start_row=0, end_row=None)
 
     #dakar.plot_compare_FM_summary()

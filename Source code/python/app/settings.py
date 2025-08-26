@@ -1,19 +1,11 @@
-from dataclasses import dataclass, field,asdict
+from dataclasses import dataclass, field
 from typing import Dict, Any,List
 import os 
 import json
-
+from dacite import from_dict, Config
 
 @dataclass
 class crop_FM_classify_top_bottom_Settings:
-    raw_image_input_folder: str = field(
-        default=r'data',
-        metadata={
-            "tooltip": "Path to the folder containing raw images for processing", 
-            "setting_type": "folder",
-            "label": "Raw Image Input Folder"
-        }
-    )
 
     image_output_folder: str = field(
         default=r'Result\crop_to_classify_top_bottom\incomingstate\v1',
@@ -30,14 +22,6 @@ class crop_FM_classify_top_bottom_Settings:
 
 @dataclass
 class crop_FM_check_background_fm_settings:
-    raw_image_input_folder: str = field(
-        default=r'data',
-        metadata={
-            "tooltip": "Path to the folder containing raw images for processing", 
-            "setting_type": "folder",
-            "label": "Raw Image Input Folder"
-        }
-    )
 
     image_output_folder: str = field(
         default=r'Result\Crop_to_classify_background\incomingstate',
@@ -225,6 +209,24 @@ class MasterSettings:
     )
 
 
+def load_settings_from_json1(file_path: str = 'settings.json') -> MasterSettings:
+    """
+    Loads settings from a JSON file, using defaults for missing or invalid fields.
+    """
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        print("Error loading settings: use default settings instead")
+        return MasterSettings()
+
+    print(f"Suceesful loading json settings from {file_path}")
+
+    return MasterSettings(
+        Dakar=DakarSettings(**data.get('Dakar', {})),
+        plotter=PlotterSettings(**data.get('DakarPlot', {}))
+    )
+
 def load_settings_from_json(file_path: str = 'settings.json') -> MasterSettings:
     """
     Loads settings from a JSON file, using defaults for missing or invalid fields.
@@ -233,13 +235,16 @@ def load_settings_from_json(file_path: str = 'settings.json') -> MasterSettings:
         with open(file_path, 'r') as f:
             data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
+        print("Error loading settings: using default settings instead")
         return MasterSettings()
 
-    return MasterSettings(
-        Dakar=DakarSettings(**data.get('Dakar', {})),
-        plotter=PlotterSettings(**data.get('DakarPlot', {}))
-    )
+    # Fix the key for plotter (was incorrectly 'DakarPlot')
+    if "plotter" in data:
+        data["DakarPlot"] = data.pop("plotter")
 
+    print(f"Successfully loaded JSON settings from {file_path}")
+    print("Type of crop_FM_classify_top_bottom in JSON:", type(data.get("Dakar", {}).get("crop_FM_classify_top_bottom")))
+    return from_dict(data_class=MasterSettings, data=data, config=Config(strict=False))
 
 
 '''
@@ -251,5 +256,5 @@ def save_settings_to_json(settings: MasterSettings = None, file_path: str = r'So
     with open(file_path, 'w') as f:
         json.dump(asdict(settings), f, indent=4)
     print('Succesfully saved json')
-'''
 
+'''

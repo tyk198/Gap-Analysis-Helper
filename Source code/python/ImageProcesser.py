@@ -5,6 +5,7 @@ import os
 from typing import Union, List, Optional
 import logging
 import tkinter as tk
+import glob
 #from .decorator import log_time
 
 class ImageProcesser:
@@ -488,180 +489,65 @@ class ImageProcesser:
             if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) >= 1:
                 cv2.destroyWindow(window_name)
 
-
     @staticmethod
-    #@log_time
-    def _match_white_red_image( row: pd.Series,raw_image_folder_path):
-        try:
-            foil_name = str(row['NAME']).strip()
-            fov_to_match = int(row['FOV NUMBER'])
-            state_name = str(row['STATE']).strip()
-            with open("debug_log.txt", "a") as f:
-                f.write(f"Searching for: NAME='{foil_name}', STATE='{state_name}', FOV='{fov_to_match}'\n")
-            #image_id = str(row['IMAGE ID']).strip()
-        except (KeyError, ValueError):
+    def _match_white_red_image(state: str, foil: str, fov_number: int, raw_image_folder_path: str):
+        """
+        Matches white and red images based on state, foil, and FOV number in the specified folder structure, searching recursively.
+        
+        Args:
+            state (str): The state name (subfolder under raw_image_folder_path).
+            foil (str): The foil name (subfolder under state folder).
+            fov_number ( int): The FOV number to match in the filename.
+            raw_image_folder_path (str): The base path to the image folder.
+        
+        Returns:
+            tuple: (white_image_path, red_image_path) or (None, None) if no match is found.
+        """
+        import os
+        import glob
+
+        # Sanitize inputs
+        state = str(state).strip()
+        foil = str(foil).strip()
+        fov_number = int(fov_number)
+        
+        # Construct the expected folder path
+        target_folder = os.path.join(raw_image_folder_path, state, foil)
+        
+        # Check if the target folder exists
+        if not os.path.exists(target_folder):
             return None, None
-
-        candidate_files = []
-        for root, dirs, files in os.walk(raw_image_folder_path):
-            for filename in files:
-                if not filename.endswith('.jpeg'):
-                    continue
-                full_filepath = os.path.join(root, filename)
-                if foil_name not in full_filepath:
-                    continue
-                if state_name not in full_filepath:
-                    continue
-                try:
-                    stem = os.path.splitext(filename)[0]
-                    if int(stem.split('_')[-1]) != fov_to_match:
-                        continue
-                except (ValueError, IndexError):
-                    continue
-
-                candidate_files.append(full_filepath)
-
+        
+        # Get all .jpeg files in the target folder recursively
+        candidate_files = [f for f in glob.glob(os.path.join(target_folder, "**", "*.jpeg"), recursive=True)]
+        
         found_white_path = None
-
         found_red_path = None
-
-        for path_string in candidate_files:
+        
+        # Iterate through files to find matching white and red images
+        for file_path in candidate_files:
+            filename = os.path.basename(file_path)
             try:
-                filename = os.path.basename(path_string)
-                filename_parts = filename.split('_')
+                # Extract FOV number from filename (assuming it's the last part before extension)
+                stem = os.path.splitext(filename)[0]
+                file_fov = int(stem.split('_')[-1])
                 
+                # Check if FOV number matches
+                if file_fov != fov_number:
+                    continue
+                
+                # Check image type (assuming '01' for white, '02' for red)
+                filename_parts = filename.split('_')
                 if len(filename_parts) > 2:
                     type_identifier = filename_parts[2]
                     if type_identifier == '01':
-                        found_white_path = path_string
+                        found_white_path = file_path
                     elif type_identifier == '02':
-                        found_red_path = path_string
-            except IndexError:
-                continue
-        # print(found_white_path,found_red_path)
-        if not found_white_path or not found_red_path:
-            return None, None
-
-        return found_white_path, found_red_path
-
-
-
-    @staticmethod
-    def _match_white_red_image1(row: pd.Series, raw_image_folder_path: str):
-        """
-        Finds a matching pair of 'white' (01) and 'red' (02) jpeg images
-        based on criteria from a pandas row, with detailed logging of the process.
-        """
-        print("-" * 50)
-        
-        # --- 1. EXTRACT SEARCH CRITERIA ---
-        try:
-            foil_name = str(row['NAME']).strip()
-            fov_to_match = int(row['FOV NUMBER'])
-            state_name = str(row['STATE']).strip()
-            print(f"[INFO] New search initiated for:")
-            print(f"  - NAME:          '{foil_name}'")
-            print(f"  - STATE:         '{state_name}'")
-            print(f"  - FOV NUMBER:    {fov_to_match}")
-            
-        except (KeyError, ValueError) as e:
-            print(f"[FAIL] Could not extract search criteria from the row. Error: {e}")
-            return None, None
-
-        # --- 2. SEARCH FOR CANDIDATE FILES ---
-        candidate_files = []
-        print(f"\n[INFO] Starting file search in root folder: '{raw_image_folder_path}'...")
-        
-        for root, dirs, files in os.walk(raw_image_folder_path):
-            for filename in files:
-                # Check 1: Must be a JPEG
-                if not filename.lower().endswith('.jpeg'):
-                    continue
-                
-                full_filepath = os.path.join(root, filename)
-                #print(f"\n[DEBUG] Evaluating file: {filename}")
-
-                # Check 2: Foil name must be in the path
-                if foil_name not in full_filepath:
-                    #print(f"  -> REJECTED: Foil name '{foil_name}' not in path.")
-                    continue
-
-                # Check 3: State name must be in the path
-                if state_name not in full_filepath:
-                    #print(f"  -> REJECTED: State name '{state_name}' not in path.")
-                    continue
-                
-                # Check 4: FOV number in filename must match
-                try:
-                    stem = os.path.splitext(filename)[0]
-                    fov_in_filename = int(stem.split('_')[-1])
-                    if fov_in_filename != fov_to_match:
-                        #print(f"  -> REJECTED: FOV in filename ({fov_in_filename}) does not match target ({fov_to_match}).")
-                        continue
-                except (ValueError, IndexError):
-                   # print(f"  -> REJECTED: Could not parse FOV number from filename.")
-                    continue
-
-                # If all checks pass, it's a candidate
-                print(f"  -> ACCEPTED as a candidate.")
-                candidate_files.append(full_filepath)
-
-        # --- 3. CLASSIFY CANDIDATES ---
-        print("-" * 25)
-        print(f"[INFO] Search complete. Found {len(candidate_files)} candidate file(s).")
-
-        if not candidate_files:
-            print("[FAIL] No potential candidate files found matching all criteria.")
-            return None, None
-
-        print("\n[INFO] Classifying candidates as 'white' (01) or 'red' (02)...")
-        found_white_path = None
-        found_red_path = None
-
-        for path_string in candidate_files:
-            filename = os.path.basename(path_string)
-            print(f"  -> Analyzing candidate: {filename}")
-            try:
-                filename_parts = filename.split('_')
-                
-                # Expecting format like '..._..._TYPE_..._FOV.jpeg'
-                if len(filename_parts) > 2:
-                    type_identifier = filename_parts[2]
-                    if type_identifier == '01':
-                        found_white_path = path_string
-                        print(f"    [SUCCESS] Identified as WHITE image.")
-                    elif type_identifier == '02':
-                        found_red_path = path_string
-                        print(f"    [SUCCESS] Identified as RED image.")
-                    else:
-                        print(f"    [DEBUG] Type identifier '{type_identifier}' is not '01' or '02'. Ignoring.")
-                else:
-                    print(f"    [WARN] Filename does not have enough parts to identify type. Skipping.")
-            except IndexError:
-                # This case is less likely with the check above, but good practice
-                print(f"    [WARN] Could not parse filename parts for '{filename}'. Skipping.")
+                        found_red_path = file_path
+            except (ValueError, IndexError):
                 continue
         
-        # --- 4. FINAL SUMMARY AND RETURN ---
-        print("\n" + "-" * 25)
-        print("[INFO] Final Check:")
-        if found_white_path:
-            print(f"  - WHITE image: FOUND ({os.path.basename(found_white_path)})")
-        else:
-            print("  - WHITE image: NOT FOUND")
-
-        if found_red_path:
-            print(f"  - RED image:   FOUND ({os.path.basename(found_red_path)})")
-        else:
-            print("  - RED image:   NOT FOUND")
-
-        if not found_white_path or not found_red_path:
-            print("\n[FAIL] Did not find a complete white/red pair. Returning None.")
-            return None, None
-
-        print("\n[SUCCESS] Found complete pair. Returning paths.")
         return found_white_path, found_red_path
-
 
 
     @staticmethod

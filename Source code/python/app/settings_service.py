@@ -30,6 +30,9 @@ class SettingsService:
 
     def save_to_json(self, settings: MasterSettings, file_path: str):
         """Saves a MasterSettings instance to a JSON file."""
+        print(settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs)
+        print(type(settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs))
+
         with open(file_path, 'w') as f:
             json.dump(asdict(settings), f, indent=4)
 

@@ -8,6 +8,7 @@ import os
 import openpyxl
 from datetime import datetime
 import shutil
+import glob
 
 
 
@@ -20,15 +21,15 @@ class Dakar:
         self.settings = settings
         self.worksheet_to_read  =self.settings.Dakar.worksheet_to_read
 
-        self.excel_path = self.settings.Dakar.Excel_input_path
-        self.excel_copy_path = self.settings.Dakar.Excel_copy_path
+        #self.excel_path = self.settings.Dakar.Excel_input_path
+        #self.excel_copy_path = self.settings.Dakar.Excel_copy_path
 
 
-        self.data = pd.read_excel(self.excel_copy_path, sheet_name= self.worksheet_to_read).copy()
-        self.wb = openpyxl.load_workbook(self.excel_copy_path,data_only=True)
+        #self.data = pd.read_excel(self.excel_copy_path, sheet_name= self.worksheet_to_read).copy()
+        #self.wb = openpyxl.load_workbook(self.excel_copy_path,data_only=True)
 
-        self.ImageProcesser = ImageProcesser(self.data)
-        self.Plotter = Plotter(self.data,self.settings.plotter)
+        
+        #self.Plotter = Plotter(self.data,self.settings.plotter)
         self.ExcelProcesser = ExcelProcesser()
 
 
@@ -108,7 +109,6 @@ class Dakar:
         print(f"Successfully combined {len(all_dfs)} CSV files with calculated columns into '{output_path}'")
 
 
-
     def generate_excel_column_info(self):
 
         """
@@ -126,43 +126,6 @@ class Dakar:
         self.ExcelProcesser.create_table(target_ws)
         self.wb.save(self.excel_copy_path)
 
-    def crop_FM_classify_top_bottom(self, start_row=0, end_row=None):
-        target_ws  = self.wb[self.worksheet_to_read]
-        raw_image_folder_path = self.settings.Dakar.crop_FM_classify_top_bottom.raw_image_input_folder
-        output_folder = self.settings.Dakar.crop_FM_classify_top_bottom.image_output_folder
-        excluded_fovs = self.settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs
-
-        self.ExcelProcesser.add_column_header(target_ws,"Hyperlink")
-
-        df_slice = self.data.iloc[start_row:end_row]
-        mask_fov = ~df_slice['FOV NUMBER'].isin(excluded_fovs)
-        df_to_process = df_slice[mask_fov]
-
-        for index, row in df_to_process.iterrows():
-            fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["NAME"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"]) 
-
-            white_image, red_image = self.ImageProcesser._match_white_red_image(row,raw_image_folder_path)
-
-            white_img , red_img = self.ImageProcesser._read_image([white_image,red_image])
-            white_img   = self.ImageProcesser._crop_image_base_on_coordinate(white_img,x,y,fm_size*3)
-            red_img   = self.ImageProcesser._crop_image_base_on_coordinate(red_img,x,y,fm_size*3)
-            combined_img = self.ImageProcesser._combine_image(white_img,red_img,direction = "horizontal")
-            combined_img = self.ImageProcesser._resize_keep_aspect(combined_img)
-           
-            title_string = f'{row_id}_{state}_{name}\nFOV: {fov}\nFOV Number: {fov_number}\nx: {x} y: {y}\nFMsize: {fm_size}'
-            file_name = row_id + " " + f'{state} {name} {fov} FOV Number_{fov_number} X_{x} Y_{y} FMsize_{fm_size}'
-            image_absolute_path = os.path.join(output_folder, file_name)
-            combined_img = self.ImageProcesser._overlay_text(title_string,combined_img,"top-left")
-            #self.ImageProcesser.show_image(combined_img,window_name = title_string ,scale_resize  = 1)
-
-            self.ImageProcesser._save_image_to_folder(output_folder,combined_img ,file_name)
-
-            image_absolute_path = os.path.abspath(image_absolute_path + ".png")
-            excel_absolute_path = os.path.abspath(self.excel_copy_path)
-
-
-            self.ExcelProcesser.add_hyperlink_to_column(target_ws,image_absolute_path,excel_absolute_path,row_id)
-        self.wb.save(self.excel_copy_path)
 
     def crop_FM_check_background_fm(self, start_row=0, end_row=None):
         target_ws  = self.wb[self.worksheet_to_read]
@@ -212,6 +175,92 @@ class Dakar:
             excel_absolute_path = os.path.abspath(self.excel_copy_path)
             self.ExcelProcesser.add_hyperlink_to_column(target_ws,image_absolute_path,excel_absolute_path,row_id,hyperlink_column_header)
         self.wb.save(self.excel_copy_path)
+
+
+
+    def crop_FM_classify_top_bottom_from_csv(self, start_row=0, end_row=None):
+        """
+        Crops and classifies images based on data from the combined CSV file, iterating through states and foils.
+        
+        Args:
+            start_row (int): Starting row index for CSV processing.
+            end_row (int, optional): Ending row index for CSV processing. Defaults to None (process all rows).
+        """
+        # Find the latest combined CSV
+        list_of_files = glob.glob('Result/Combined_CSVs/*.csv')
+        if not list_of_files:
+            print("No combined CSV file found.")
+            return
+        latest_file = max(list_of_files, key=os.path.getctime)
+        print(f"Processing file: {latest_file}")
+        
+        # Load CSV
+        df = pd.read_csv(latest_file)
+        self.ImageProcesser = ImageProcesser(df)
+        
+        # Get settings
+        raw_image_folder_path = self.settings.Dakar.data
+        output_folder = self.settings.Dakar.crop_FM_classify_top_bottom.image_output_folder
+        excluded_fovs = self.settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs
+        
+        # Create a new Excel file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"FM_Gap_analysis_{timestamp}.xlsx"
+        output_path = os.path.join("Result", output_filename)
+        
+        # Slice the dataframe
+        df_slice = df.iloc[start_row:end_row]
+        mask_fov = ~df_slice['FOV NUMBER'].isin(excluded_fovs)
+        df_to_process = df_slice[mask_fov].copy()  # Avoid SettingWithCopyWarning
+        
+        # Add a column for the hyperlink
+        df_to_process['Hyperlink'] = ''
+        states = df_to_process['STATE'].unique()
+        
+        for state in states:
+            state_df = df_to_process[df_to_process['STATE'] == state]
+            foils = state_df['FOIL'].unique()
+            print(f"Processing state '{state}' with {len(foils)} unique foils: {foils}")
+            
+            for foil in foils:
+                foil_df = state_df[state_df['FOIL'] == foil]
+                fov_numbers = foil_df['FOV NUMBER'].unique()
+                print(f"Processing foil '{foil}' with {len(fov_numbers)} FOVs: {fov_numbers}")
+                
+                for fov_number in fov_numbers:
+                    matching_rows = foil_df[foil_df['FOV NUMBER'] == fov_number]
+                    
+                    # Find matching white and red images
+                    white_image, red_image = self.ImageProcesser._match_white_red_image(
+                        state, foil, fov_number, raw_image_folder_path
+                    )
+                    if white_image and red_image:
+                        white_img , red_img = self.ImageProcesser._read_image([white_image,red_image])
+                        for index, row in matching_rows.iterrows():
+                            fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["FOIL"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"])
+                            
+                            cropped_white_img   = self.ImageProcesser._crop_image_base_on_coordinate(white_img,x,y,fm_size*3)
+                            cropped_red_img   = self.ImageProcesser._crop_image_base_on_coordinate(red_img,x,y,fm_size*3)
+                            combined_img = self.ImageProcesser._combine_image(cropped_white_img,cropped_red_img,direction = "horizontal")
+                            combined_img = self.ImageProcesser._resize_keep_aspect(combined_img)
+                        
+                            title_string = f'{row_id}_{state}_{name}\nFOV: {fov}\nFOV Number: {fov_number}\nx: {x} y: {y}\nFMsize: {fm_size}'
+                            file_name = row_id + " " + f'{state} {name} {fov} FOV Number_{fov_number} X_{x} Y_{y} FMsize_{fm_size}'
+                            image_absolute_path = os.path.join(output_folder, file_name)
+                            combined_img = self.ImageProcesser._overlay_text(title_string,combined_img,"top-left")
+
+                            self.ImageProcesser._save_image_to_folder(output_folder,combined_img ,file_name)
+
+                            image_absolute_path = os.path.abspath(image_absolute_path + ".png")
+                            df_to_process.loc[index, 'Hyperlink'] = f'=HYPERLINK("{image_absolute_path}", "Link")'
+
+                    else:
+                        print(f"Skipping row {row_id}: Images not found (White: {white_image}, Red: {red_image})")
+                        
+        df_to_process.to_excel(output_path, index=False, engine='openpyxl')
+        print(f"Successfully created Excel file with hyperlinks at '{output_path}'")
+
+
 
 
     def plot_compare_FM_summary(self):
