@@ -2,7 +2,7 @@ import os
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QLineEdit, QPushButton, QFileDialog, QVBoxLayout, 
-    QTreeWidget, QTreeWidgetItem, QGroupBox
+    QTreeWidget, QTreeWidgetItem, QFrame, QLabel
 )
 
 class PathSelectorWidget(QWidget):
@@ -24,7 +24,6 @@ class PathSelectorWidget(QWidget):
         self.button.clicked.connect(self.open_dialog)
 
     def open_dialog(self):
-        """Opens a file or folder dialog and sets the line edit's text."""
         if self.selection_mode == 'folder':
             path = QFileDialog.getExistingDirectory(self, "Select Folder", self.line_edit.text())
         else:  # 'file'
@@ -34,15 +33,14 @@ class PathSelectorWidget(QWidget):
             self.line_edit.setText(path)
 
     def text(self) -> str:
-        """Gets the text from the line edit."""
         return self.line_edit.text()
 
     def setText(self, text: str):
-        """Sets the text of the line edit."""
         self.line_edit.setText(text)
 
 
 class FoilsSelectorWidget(QWidget):
+    # ... (rest of the class is unchanged) ...
     """A tree-based widget to select folders and subfolders."""
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
@@ -62,17 +60,14 @@ class FoilsSelectorWidget(QWidget):
         layout.addWidget(self.refresh_button)
 
     def set_data_path(self, path: str, selections: dict):
-        """Sets the root path for folders and populates the tree."""
         self._data_path = path
         self.populate_tree(selections)
 
     def repopulate_tree(self):
-        """Repopulates the tree using the current path and selections."""
         current_selections = self.get_selected_as_dict()
         self.populate_tree(current_selections)
 
     def populate_tree(self, selections: dict):
-        """Populates the tree from the data path and applies selections."""
         self._is_populating = True
         self.tree.clear()
         if not self._data_path or not os.path.isdir(self._data_path):
@@ -113,7 +108,6 @@ class FoilsSelectorWidget(QWidget):
         self._is_populating = False
 
     def get_selected_as_dict(self) -> dict:
-        """Returns the selected items as a dictionary."""
         selections = {}
         root = self.tree.invisibleRootItem()
         for i in range(root.childCount()):
@@ -129,17 +123,14 @@ class FoilsSelectorWidget(QWidget):
         return selections
 
     def _handle_item_changed(self, item: QTreeWidgetItem, column: int):
-        """Handles check state changes for parent/child items."""
         if self._is_populating or column != 0:
             return
         
         self._is_populating = True
-        # Update children if parent is checked/unchecked
         if item.childCount() > 0:
             for i in range(item.childCount()):
                 item.child(i).setCheckState(0, item.checkState(0))
 
-        # Update parent if child is checked/unchecked
         parent = item.parent()
         if parent:
             checked_count = 0
@@ -155,43 +146,54 @@ class FoilsSelectorWidget(QWidget):
                 parent.setCheckState(0, Qt.PartiallyChecked)
         self._is_populating = False
 
-class CollapsibleGroupBox(QGroupBox):
-    """A custom group box that can be collapsed and colored."""
-    def __init__(self, title: str = "", color: str = "#FFFFFF", parent: QWidget = None):
-        super().__init__(title, parent)
-        self.setCheckable(True)
-        self.setChecked(True)
+class CollapsibleSection(QWidget):
+    """A custom collapsible widget with a header and content area."""
+    def __init__(self, title: str = "", color: str = "transparent", parent: QWidget = None):
+        super().__init__(parent)
 
-        self.content_widget = QWidget()
-        self._content_layout = QVBoxLayout(self.content_widget)
-        self.setLayout(QVBoxLayout())
-        self.layout().addWidget(self.content_widget)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
-        self.toggled.connect(self.content_widget.setVisible)
+        self.header = QFrame()
+        self.header.setObjectName("collapsible_header")
+        header_layout = QHBoxLayout(self.header)
+        header_layout.setContentsMargins(4, 4, 4, 4)
+
+        self.toggle_button = QLabel("▼")
+        self.title_label = QLabel(title)
+        self.title_label.setStyleSheet("font-weight: bold;")
+
+        header_layout.addWidget(self.toggle_button)
+        header_layout.addWidget(self.title_label)
+        header_layout.addStretch()
+
+        self.content_area = QWidget()
+        self.content_area.setObjectName("collapsible_content")
+        self._content_layout = QVBoxLayout(self.content_area)
+        self._content_layout.setContentsMargins(10, 5, 10, 10)
+
+        main_layout.addWidget(self.header)
+        main_layout.addWidget(self.content_area)
+
+        self.header.mousePressEvent = self._toggle_collapsed
+        self.is_collapsed = False
 
         self.setStyleSheet(f"""
-            QGroupBox {{
+            #collapsible_content {{
                 background-color: {color};
-                border: 1px solid gray;
-                border-radius: 5px;
-                margin-top: 1ex; 
+                border: 1px solid #D0D0D0;
+                border-top: none;
             }}
-            QGroupBox::title {{
-                subcontrol-origin: margin;
-                subcontrol-position: top left;
-                padding: 0 3px;
-            }}
-            QGroupBox::indicator {{
-                width: 13px;
-                height: 13px;
-            }}
-            QGroupBox::indicator:unchecked {{
-                image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAFNJREFUOE9jZKAQMFKon2FhYPgP5T8Gf4F4GGgGrAGJElUaDAwM/gP5T4iB4f+fGCIYZAyQ4T8TjQyQ4T8TjQzQoYFhA2A+iG8AAN1jBwB2g1YxAAAAAElFTkSuQmCC); /* Right-pointing triangle */
-            }}
-            QGroupBox::indicator:checked {{
-                image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAEtJREFUOE9jZKAQMFKon2FhYPgP5T8Gf4F4GGgGrAGJElUaDAwM/gP5T4iB4f+fGCIYZAyQ4T8TjQyQ4T8TjQzQoYFhA2A+iG8AAN1jBwB2g1YxAAAAAElFTkSuQmCC); /* Down-pointing triangle - replace with actual image data */
+            #collapsible_header {{
+                border: 1px solid #D0D0D0;
             }}
         """)
+
+    def _toggle_collapsed(self, event):
+        self.is_collapsed = not self.is_collapsed
+        self.content_area.setVisible(not self.is_collapsed)
+        self.toggle_button.setText("▶" if self.is_collapsed else "▼")
 
     def contentLayout(self) -> QVBoxLayout:
         return self._content_layout

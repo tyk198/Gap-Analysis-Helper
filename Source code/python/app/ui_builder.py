@@ -4,11 +4,11 @@ from typing import Any, Dict
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator, QDoubleValidator
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QGroupBox,
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, 
     QTreeWidget, QTreeWidgetItem, QComboBox
 )
 
-from custom_widgets import PathSelectorWidget, FoilsSelectorWidget, CollapsibleGroupBox
+from custom_widgets import PathSelectorWidget, FoilsSelectorWidget, CollapsibleSection
 
 SECTION_COLORS = ["#E6F1F6", "#E6F6E8", "#F6F3E6", "#F6E6E6", "#F1E6F6", "#F6E6F1"]
 
@@ -19,12 +19,8 @@ class SettingsUIBuilder:
         self.widget_map = {}
 
     def build_ui(self, settings_obj: Any, parent_layout: QVBoxLayout) -> Dict[str, QWidget]:
-        """
-        Generates the UI for the given settings object and populates the parent layout.
-        Returns a map of setting keys to their corresponding widgets.
-        """
         self.widget_map.clear()
-        self._create_ui_from_dataclass(settings_obj, parent_layout, "MasterSettings", 0)
+        self._create_ui_from_dataclass(settings_obj, parent_layout, "MasterSettings", -1) # Start level at -1
         return self.widget_map
 
     def _create_ui_from_dataclass(self, dc_instance: Any, parent_layout: QVBoxLayout, base_key: str, level: int):
@@ -41,11 +37,14 @@ class SettingsUIBuilder:
             label_text = f.metadata.get("label", f.name)
 
             if is_dataclass(value):
-                color = SECTION_COLORS[level % len(SECTION_COLORS)]
-                group_box = CollapsibleGroupBox(label_text, color)
-                group_box.setToolTip(tooltip)
-                parent_layout.addWidget(group_box)
-                self._create_ui_from_dataclass(value, group_box.contentLayout(), key, level + 1)
+                # Only color sections inside the top level
+                color = SECTION_COLORS[level % len(SECTION_COLORS)] if level >= 0 else "transparent"
+                
+                section = CollapsibleSection(label_text, color)
+                section.setToolTip(tooltip)
+                parent_layout.addWidget(section)
+                # Pass the content layout of the new section for the recursive call
+                self._create_ui_from_dataclass(value, section.contentLayout(), key, level + 1)
             else:
                 h_layout = QHBoxLayout()
                 label = QLabel(f"{label_text}:")
@@ -58,7 +57,6 @@ class SettingsUIBuilder:
                 parent_layout.addLayout(h_layout)
 
     def _create_widget_for_value(self, value: Any, tooltip: str, setting_type: str | None, widget_type: str | None) -> QWidget:
-        """Creates an appropriate widget for a given data type."""
         widget: QWidget
         if widget_type == "foils_selector":
             widget = FoilsSelectorWidget()
@@ -87,14 +85,12 @@ class SettingsUIBuilder:
         return widget
 
     def _populate_tree_from_dict(self, tree_widget: QTreeWidget, data: Dict):
-        """Populates a QTreeWidget from a dictionary."""
         tree_widget.clear()
         for key, value in data.items():
             parent_item = QTreeWidgetItem(tree_widget, [key, ""])
             self._add_tree_items(parent_item, value)
 
     def _add_tree_items(self, parent_item: QTreeWidgetItem, value: Any):
-        """Recursive helper to add items to the tree."""
         if isinstance(value, dict):
             parent_item.setText(1, "")
             for key, val in value.items():
