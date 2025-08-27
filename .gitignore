@@ -6,13 +6,10 @@
 
 # Do not ignore Python files
 !*.py
-
-# Explicitly ignore the .venv folder
+!*.json
 .venv/
-/python/
 
 
-# Explicitly unignore selected files and folders
 !.gitignore
 !requirements.txt
 
@@ -20,7 +17,4 @@
 !.vscode/
 !.vscode/**
 
-# Unignore .cursor folder and all files inside
-!.cursor/
-!.cursor/**
 

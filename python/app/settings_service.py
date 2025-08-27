@@ -31,7 +31,7 @@ class SettingsService:
 
     def save_to_json(self, settings: MasterSettings):
         """Saves a MasterSettings instance to a JSON file."""
-        folder_path = 'Source code/python/app'
+        folder_path = 'python/app'
         settings_file_path  = os.path.join(folder_path, 'settings.json')
         os.makedirs(folder_path, exist_ok=True)
         with open(settings_file_path, 'w') as f:

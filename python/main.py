@@ -5,7 +5,7 @@ from app.settings import load_settings_from_json
 
 def main():
     
-    settings = load_settings_from_json(r'Source code\python\app\settings.json')
+    settings = load_settings_from_json(r'python\app\settings.json')
     dakar = Dakar(settings)
 
     start_time = datetime.now()
