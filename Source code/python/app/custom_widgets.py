@@ -78,33 +78,19 @@ class FoilsSelectorWidget(QWidget):
             folder_path = os.path.join(self._data_path, folder_name)
             if os.path.isdir(folder_path):
                 parent_item = QTreeWidgetItem(self.tree, [folder_name])
-                parent_item.setFlags(parent_item.flags() | Qt.ItemIsUserCheckable)
-                parent_item.setCheckState(0, Qt.Unchecked)
 
                 selected_subfolders = selections.get(folder_name, [])
-                has_selected_child = False
-                all_children_selected = True
-
+                
                 subfolders = [d for d in sorted(os.listdir(folder_path)) if os.path.isdir(os.path.join(folder_path, d))]
-                if not subfolders:
-                    all_children_selected = False
-
+                
                 for subfolder_name in subfolders:
                     child_item = QTreeWidgetItem(parent_item, [subfolder_name])
                     child_item.setFlags(child_item.flags() | Qt.ItemIsUserCheckable)
                     if subfolder_name in selected_subfolders:
                         child_item.setCheckState(0, Qt.Checked)
-                        has_selected_child = True
                     else:
                         child_item.setCheckState(0, Qt.Unchecked)
-                        all_children_selected = False
-                
-                if has_selected_child:
-                    if all_children_selected:
-                        parent_item.setCheckState(0, Qt.Checked)
-                    else:
-                        parent_item.setCheckState(0, Qt.PartiallyChecked)
-
+        
         self._is_populating = False
 
     def get_selected_as_dict(self) -> dict:
@@ -112,39 +98,21 @@ class FoilsSelectorWidget(QWidget):
         root = self.tree.invisibleRootItem()
         for i in range(root.childCount()):
             parent_item = root.child(i)
-            if parent_item.checkState(0) != Qt.Unchecked:
-                selected_subfolders = []
-                for j in range(parent_item.childCount()):
-                    child_item = parent_item.child(j)
-                    if child_item.checkState(0) == Qt.Checked:
-                        selected_subfolders.append(child_item.text(0))
-                if selected_subfolders:
-                    selections[parent_item.text(0)] = selected_subfolders
+            selected_subfolders = []
+            for j in range(parent_item.childCount()):
+                child_item = parent_item.child(j)
+                if child_item.checkState(0) == Qt.Checked:
+                    selected_subfolders.append(child_item.text(0))
+            if selected_subfolders:
+                selections[parent_item.text(0)] = selected_subfolders
         return selections
 
     def _handle_item_changed(self, item: QTreeWidgetItem, column: int):
         if self._is_populating or column != 0:
             return
         
-        self._is_populating = True
-        if item.childCount() > 0:
-            for i in range(item.childCount()):
-                item.child(i).setCheckState(0, item.checkState(0))
-
-        parent = item.parent()
-        if parent:
-            checked_count = 0
-            for i in range(parent.childCount()):
-                if parent.child(i).checkState(0) == Qt.Checked:
-                    checked_count += 1
-            
-            if checked_count == 0:
-                parent.setCheckState(0, Qt.Unchecked)
-            elif checked_count == parent.childCount():
-                parent.setCheckState(0, Qt.Checked)
-            else:
-                parent.setCheckState(0, Qt.PartiallyChecked)
-        self._is_populating = False
+        # Since parent items are not checkable, this method is no longer needed.
+        pass
 
 class CollapsibleSection(QWidget):
     """A custom collapsible widget with a header and content area."""

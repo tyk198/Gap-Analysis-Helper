@@ -25,7 +25,7 @@ class Dakar:
 
         self.ExcelProcesser = ExcelProcesser()
 
-    def get_and_combine_csvs(self):
+    def combine_csv(self):
         """
         Finds and combines CSV files based on the foils_to_plot setting,
         and adds calculated columns.
@@ -102,7 +102,11 @@ class Dakar:
 
         df = pd.read_excel(self.excel_path)
         self.ImageProcesser = ImageProcesser(df)
-        output_folder = self.settings.Dakar.crop_FM_classify_top_bottom.image_output_folder
+
+        save_folder = self.settings.Dakar.save_folder
+        save_folder = os.path.join(save_folder,"Combined white and red images")
+        os.makedirs(save_folder, exist_ok=True)
+
         excluded_fovs = self.settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs
         
 
@@ -131,7 +135,6 @@ class Dakar:
                 for fov_number in fov_numbers:
                     matching_rows = foil_df[foil_df['FOV NUMBER'] == fov_number]
                     
-                    # Find matching white and red images
                     white_image, red_image = self.ImageProcesser._match_white_red_image(
                         state, foil, fov_number, self.raw_image_folder_path
                     )
@@ -147,10 +150,10 @@ class Dakar:
                         
                             title_string = f'{row_id}_{state}_{name}\nFOV Number: {fov_number}\nx: {x} y: {y}\nFMsize: {fm_size}'
                             file_name = row_id + " " + f'{state} {name} {fov} FOV Number_{fov_number} X_{x} Y_{y} FMsize_{fm_size}'
-                            image_absolute_path = os.path.join(output_folder, file_name)
+                            image_absolute_path = os.path.join(save_folder, file_name)
                             combined_img = self.ImageProcesser._overlay_text(title_string,combined_img,"top-left")
 
-                            self.ImageProcesser._save_image_to_folder(output_folder,combined_img ,file_name)
+                            self.ImageProcesser._save_image_to_folder(save_folder,combined_img ,file_name)
 
                             image_absolute_path = os.path.abspath(image_absolute_path + ".png")
                             df_to_process.loc[index, hyperlink_header] = f'=HYPERLINK("{image_absolute_path}", "View")'

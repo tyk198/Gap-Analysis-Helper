@@ -61,14 +61,7 @@ class plot_complete_FM_summary_settings:
 @dataclass
 class DakarSettings:
     
-    json_settings_folder: str = field(
-        default=r'Source code\python\app',
-        metadata={
-            "tooltip": "Folder to the json settings file",
-            "setting_type": "folder",
-            "label": "Setting folder"
-        }
-    )
+    
 
     data: str = field(
         default=r'data/Raw data',
@@ -95,6 +88,19 @@ class DakarSettings:
             "label": "Excel file name"
         }
     )
+
+    save_folder: str = field(
+        default=r'result',
+        metadata={
+            "tooltip": "The folder to save all the combined images and plot", 
+            "setting_type": "folder",
+            "label": "Save folder"
+        }
+    )
+
+
+
+
 
     image_width: str = field(
         default=66320,
