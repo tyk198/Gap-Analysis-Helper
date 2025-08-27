@@ -1,3 +1,4 @@
+import os
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QScrollArea, QFileDialog, QMessageBox
@@ -92,14 +93,15 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"Failed to load settings: {e}")
 
     def _save_settings(self):
-        """Saves the current GUI state to a JSON file."""
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Settings", "", "JSON Files (*.json)")
-        if not file_path:
-            return
-
+        """Saves the current GUI state to the path specified in the settings."""
         try:
             updated_settings = self.settings_service.build_dataclass_from_ui(self.widget_map)
-            self.settings_service.save_to_json(updated_settings, file_path)
-            QMessageBox.information(self, "Success", f"Settings saved to {file_path}")
+            folder_path = updated_settings.Dakar.json_settings_folder
+            
+            os.makedirs(folder_path, exist_ok=True)
+
+            self.settings_service.save_to_json(updated_settings, folder_path)
+            self.settings_obj = updated_settings
+            QMessageBox.information(self, "Success", f"Settings saved to {folder_path}")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to save settings: {e}")

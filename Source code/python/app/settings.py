@@ -8,7 +8,7 @@ from dacite import from_dict, Config
 class crop_FM_classify_top_bottom_Settings:
 
     image_output_folder: str = field(
-        default=r'Result\crop_to_classify_top_bottom\incomingstate\v1',
+        default=r'result\images\white_red_combined',
         metadata={
             "tooltip": "Path to the folder containing cropped and combined images", 
             "setting_type": "folder",
@@ -24,7 +24,7 @@ class crop_FM_classify_top_bottom_Settings:
 class crop_FM_check_background_fm_settings:
 
     image_output_folder: str = field(
-        default=r'Result\Crop_to_classify_background\incomingstate',
+        default=r'result\images\Different_foil_combined',
         metadata={
             "tooltip": "Path to the folder containing cropped and combined images", 
             "setting_type": "folder",
@@ -36,7 +36,7 @@ class crop_FM_check_background_fm_settings:
 class plot_FM_summary_settings:
 
     image_output_folder: str = field(
-        default=r'Result\FM_plot',
+        default=r'result\images\FM_plot',
         metadata={
             "tooltip": "Path to the folder containing cropped and combined images", 
             "setting_type": "folder",
@@ -50,7 +50,7 @@ class plot_FM_summary_settings:
 class plot_complete_FM_summary_settings:
 
     output_folder: str = field(
-        default=r'Result\SummaryPlot\V3',
+        default=r'result\images\ComparePlot',
         metadata={
             "tooltip": "Path to the folder containing complete FM summary files", 
             "setting_type": "folder",
@@ -60,27 +60,40 @@ class plot_complete_FM_summary_settings:
 
 @dataclass
 class DakarSettings:
-
-    Excel_input_path: str = field(
-        default=r'CSV\ManualDetach Gap Analysis.xlsx',
+    
+    json_settings_folder: str = field(
+        default=r'Source code\python\app',
         metadata={
-            "tooltip": "Path to the Excel file for Dakar data", 
-            "setting_type": "file",
-            "label": "Excel Input Path"
+            "tooltip": "Folder to the json settings file",
+            "setting_type": "folder",
+            "label": "Setting folder"
         }
     )
 
-    Excel_copy_path: str = field(
-        default=r'CSV\ManualDetach Gap Analysis_copy.xlsx',
+    data: str = field(
+        default=r'data/Raw data',
         metadata={
-            "tooltip": "Path to the Excel file for Dakar data", 
-            "setting_type": "file",
-            "label": "Excel Copy Path"
+            "tooltip": "Path to the general data folder",
+            "setting_type": "folder",
+            "label": "Raw Data Folder"
         }
     )
-    worksheet_to_read: str = field(
-        default='copy data2',
-        metadata={"tooltip": "The name of the worksheet to read", "label": "Worksheet to Read"}
+
+    excel_folder: str = field(
+        default=r'result/csv',
+        metadata={
+            "tooltip": "Path to the Combined Excel file for Dakar data", 
+            "setting_type": "folder",
+            "label": "Excel Path"
+        }
+    )
+
+    excel_file_name: str = field(
+        default=r'Gap Analysis',
+        metadata={
+            "tooltip": "The excel file name", 
+            "label": "Excel file name"
+        }
     )
 
     image_width: str = field(
@@ -90,15 +103,6 @@ class DakarSettings:
     image_height: str = field(
         default=55080,
         metadata={"tooltip": "The height of image", "label": "Image Height"}
-    )
-
-    data: str = field(
-        default=r'data/Raw data',
-        metadata={
-            "tooltip": "Path to the general data folder",
-            "setting_type": "folder",
-            "label": "Data Folder"
-        }
     )
 
     min_fm_size: int = field(
@@ -209,24 +213,6 @@ class MasterSettings:
     )
 
 
-def load_settings_from_json1(file_path: str = 'settings.json') -> MasterSettings:
-    """
-    Loads settings from a JSON file, using defaults for missing or invalid fields.
-    """
-    try:
-        with open(file_path, 'r') as f:
-            data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        print("Error loading settings: use default settings instead")
-        return MasterSettings()
-
-    print(f"Suceesful loading json settings from {file_path}")
-
-    return MasterSettings(
-        Dakar=DakarSettings(**data.get('Dakar', {})),
-        plotter=PlotterSettings(**data.get('DakarPlot', {}))
-    )
-
 def load_settings_from_json(file_path: str = 'settings.json') -> MasterSettings:
     """
     Loads settings from a JSON file, using defaults for missing or invalid fields.
@@ -238,23 +224,8 @@ def load_settings_from_json(file_path: str = 'settings.json') -> MasterSettings:
         print("Error loading settings: using default settings instead")
         return MasterSettings()
 
-    # Fix the key for plotter (was incorrectly 'DakarPlot')
-    if "plotter" in data:
-        data["DakarPlot"] = data.pop("plotter")
-
-    print(f"Successfully loaded JSON settings from {file_path}")
-    print("Type of crop_FM_classify_top_bottom in JSON:", type(data.get("Dakar", {}).get("crop_FM_classify_top_bottom")))
+    
+    print(f"Successfully loaded JSON settings from {os.path.abspath(file_path)}")
     return from_dict(data_class=MasterSettings, data=data, config=Config(strict=False))
 
 
-'''
-def save_settings_to_json(settings: MasterSettings = None, file_path: str = r'Source code\json\default_settings.json') -> None:
-    """Saves MasterSettings to a JSON file, using defaults if settings is None."""
-    if settings is None:
-        settings = MasterSettings()
-    os.makedirs(os.path.dirname(file_path) or '.', exist_ok=True)
-    with open(file_path, 'w') as f:
-        json.dump(asdict(settings), f, indent=4)
-    print('Succesfully saved json')
-
-'''

@@ -8,20 +8,20 @@ def main():
     
     
     settings = MasterSettings()
-    settings = load_settings_from_json(r'Source code\json\2.json')
+    settings = load_settings_from_json(r'Source code\json\settings.json')
 
 
     dakar = Dakar(settings)
 
     start_time = datetime.now()
     
-    dakar.get_and_combine_csvs()
-    dakar.crop_FM_classify_top_bottom_from_csv(start_row=0, end_row=None)
+    #dakar.get_and_combine_csvs()
+    #dakar.crop_FM_classify_top_bottom_from_excel(start_row=0, end_row=None)
 
-    #dakar.crop_FM_check_background_fm(start_row=0, end_row=None)
+    #dakar.crop_FM_check_background_fm()
 
     #dakar.plot_compare_FM_summary()
-    #dakar.plot_FM_summary()
+    dakar.plot_FM_summary()
 
 
     end_time = datetime.now()

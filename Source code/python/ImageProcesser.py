@@ -551,7 +551,7 @@ class ImageProcesser:
 
 
     @staticmethod
-    def _match_all_name_white_images(row: pd.Series, raw_image_folder_path: str) -> List[str]:
+    def _match_all_name_white_images(state, fov,raw_image_folder_path: str) -> List[str]:
         """
         Finds all 'white' image file paths (type '01') that match a given
         IMAGE ID and FOV NUMBER.
@@ -570,16 +570,8 @@ class ImageProcesser:
             List[str]: A list of all full file paths that match all three criteria.
                     Returns an empty list if no matches are found or if input is invalid.
         """
-        # 1. Extract required information from the row, using IMAGE ID as the key.
-        try:
-            image_id_to_match = str(row['STATE']).strip()
 
-            fov_to_match = int(row['FOV NUMBER'])
-        except (KeyError, ValueError):
-            # If keys are missing or FOV is not a number, we cannot find matches.
-            return []
-
-        # 2. Walk the directory and collect files that pass all three checks.
+       # Walk the directory and collect files that pass all three checks.
         found_white_images = []
         for root, dirs, files in os.walk(raw_image_folder_path):
             for filename in files:
@@ -590,14 +582,14 @@ class ImageProcesser:
                 full_filepath = os.path.join(root, filename)
 
                 # CHECK 1: The IMAGE ID must be in the path (based on your working function).
-                if image_id_to_match not in full_filepath:
+                if state not in full_filepath:
                     continue
 
                 # CHECK 2: The FOV NUMBER must match the end of the filename.
                 try:
                     stem = os.path.splitext(filename)[0]
                     file_fov = int(stem.split('_')[-1])
-                    if file_fov != fov_to_match:
+                    if file_fov != fov:
                         continue
                 except (ValueError, IndexError):
                     # Skip if filename is not in the format ..._<number>.jpeg

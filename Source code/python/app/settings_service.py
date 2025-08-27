@@ -1,12 +1,13 @@
 import json
 from dataclasses import fields, is_dataclass, asdict
-from typing import Any, Dict
+from typing import Any, Dict, List, List
 
 from PySide6.QtWidgets import QWidget, QComboBox, QLineEdit, QTreeWidget, QTreeWidgetItem
 from PySide6.QtCore import Qt
 
 from settings import MasterSettings
 from custom_widgets import PathSelectorWidget, FoilsSelectorWidget
+import os
 
 class SettingsService:
     """Handles the business logic for settings management."""
@@ -28,12 +29,10 @@ class SettingsService:
 
         return create_from_dict(MasterSettings, data)
 
-    def save_to_json(self, settings: MasterSettings, file_path: str):
+    def save_to_json(self, settings: MasterSettings, folder_path: str):
         """Saves a MasterSettings instance to a JSON file."""
-        print(settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs)
-        print(type(settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs))
-
-        with open(file_path, 'w') as f:
+        settings_file_path  = os.path.join(folder_path, 'settings.json')
+        with open(settings_file_path, 'w') as f:
             json.dump(asdict(settings), f, indent=4)
 
     def _get_field_type_from_path(self, path: list[str]) -> Any:
@@ -87,6 +86,18 @@ class SettingsService:
         
         if isinstance(widget, QLineEdit):
             text = widget.text()
+            if (hasattr(field_type, '__origin__') and field_type.__origin__ is list) or field_type is list:
+                items = []
+                for item in text.split(','):
+                    item = item.strip()
+                    if item:
+                        try:
+                            items.append(int(item))
+                        except ValueError:
+                            # Ignore non-integer values
+                            pass
+                return items
+
             if field_type is int:
                 try: return int(text)
                 except (ValueError, TypeError): return 0

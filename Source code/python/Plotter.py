@@ -14,7 +14,7 @@ class Plotter:
     """
     def __init__(self, data, settings: PlotterSettings):
         """
-        Initialize the DakarPlotter with data and settings.
+        Initialize the PLotter with data and settings.
 
         Args:
             data: The data to plot
@@ -164,8 +164,8 @@ class Plotter:
         The name_filter can be a single string or a list of strings.
         """
         filtered_data = self.data[
-            (self.data['NAME'] == foil) &
-            (self.data['STATE'] == state)
+            (self.data['STATE'] == state) &
+            (self.data['FOIL'] == foil) 
         ]
 
         plot_title = f"State: {state} | Foil: {foil} |"
