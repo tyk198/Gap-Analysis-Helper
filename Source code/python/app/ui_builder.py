@@ -25,18 +25,38 @@ class SettingsUIBuilder:
 
     def _create_ui_from_dataclass(self, dc_instance: Any, parent_layout: QVBoxLayout, base_key: str, level: int):
         """Recursively generates UI elements for a dataclass instance."""
+        
+        # This import is fine here as it's only used in this method.
+        from collections import OrderedDict
+
+        # Group fields by layout_group or use field name for ungrouped fields
+        grouped_fields = OrderedDict()
+        
         for f in fields(dc_instance):
             if not f.metadata.get("visible_in_ui", True):
                 continue
+            
+            group = f.metadata.get("layout_group")
+            if group is None:
+                # Use field name as group name for single-field rows to maintain order
+                group = f.name 
+            
+            if group not in grouped_fields:
+                grouped_fields[group] = []
+            grouped_fields[group].append(f)
 
-            key = f"{base_key}.{f.name}"
-            value = getattr(dc_instance, f.name)
-            tooltip = f.metadata.get("tooltip", f.name)
-            setting_type = f.metadata.get("setting_type")
-            widget_type = f.metadata.get("widget_type")
-            label_text = f.metadata.get("label", f.name)
+        for group_name, fields_in_group in grouped_fields.items():
+            # Check if the group is a dataclass
+            is_dc = is_dataclass(getattr(dc_instance, fields_in_group[0].name))
 
-            if is_dataclass(value):
+            if is_dc:
+                # Handle dataclass sections (always one per row)
+                f = fields_in_group[0]
+                key = f"{base_key}.{f.name}"
+                value = getattr(dc_instance, f.name)
+                tooltip = f.metadata.get("tooltip", f.name)
+                label_text = f.metadata.get("label", f.name)
+
                 if level >= 0:  # Inner sections are collapsible and colored
                     color = SECTION_COLORS[level % len(SECTION_COLORS)]
                     section_container = CollapsibleSection(label_text, color)
@@ -51,14 +71,24 @@ class SettingsUIBuilder:
                 parent_layout.addWidget(section_container)
                 self._create_ui_from_dataclass(value, content_layout, key, level + 1)
             else:
+                # Handle regular fields (can be grouped in a row)
                 h_layout = QHBoxLayout()
-                label = QLabel(f"{label_text}:")
-                label.setToolTip(tooltip)
-                h_layout.addWidget(label)
+                for f in fields_in_group:
+                    key = f"{base_key}.{f.name}"
+                    value = getattr(dc_instance, f.name)
+                    tooltip = f.metadata.get("tooltip", f.name)
+                    setting_type = f.metadata.get("setting_type")
+                    widget_type = f.metadata.get("widget_type")
+                    label_text = f.metadata.get("label", f.name)
 
-                widget = self._create_widget_for_value(value, tooltip, setting_type, widget_type)
-                self.widget_map[key] = widget
-                h_layout.addWidget(widget, 1)
+                    label = QLabel(f"{label_text}:")
+                    label.setToolTip(tooltip)
+                    h_layout.addWidget(label)
+
+                    widget = self._create_widget_for_value(value, tooltip, setting_type, widget_type)
+                    self.widget_map[key] = widget
+                    h_layout.addWidget(widget, 1)
+                
                 parent_layout.addLayout(h_layout)
 
     def _create_widget_for_value(self, value: Any, tooltip: str, setting_type: str | None, widget_type: str | None) -> QWidget:

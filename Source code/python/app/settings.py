@@ -98,20 +98,20 @@ class DakarSettings:
 
     image_width: str = field(
         default=66320,
-        metadata={"tooltip": "The width of image", "label": "Image Width"}
+        metadata={"tooltip": "The width of image", "label": "Image Width", "layout_group": "image_size"}
     )
     image_height: str = field(
         default=55080,
-        metadata={"tooltip": "The height of image", "label": "Image Height"}
+        metadata={"tooltip": "The height of image", "label": "Image Height", "layout_group": "image_size"}
     )
 
     min_fm_size: int = field(
         default=100,
-        metadata={"tooltip": "Minimum FM size to filter", "label": "Min FM Size"}
+        metadata={"tooltip": "Minimum FM size to filter", "label": "Min FM Size", "layout_group": "fm_size"}
     )
     max_fm_size: int = field(
         default=700,
-        metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size"}
+        metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size", "layout_group": "fm_size"}
     )
 
     foils_to_plot : Dict =  field(
