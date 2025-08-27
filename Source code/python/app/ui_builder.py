@@ -87,7 +87,10 @@ class SettingsUIBuilder:
 
                     widget = self._create_widget_for_value(value, tooltip, setting_type, widget_type)
                     self.widget_map[key] = widget
-                    h_layout.addWidget(widget, 1)
+                    if widget_type == "foils_selector":
+                        h_layout.addWidget(widget, 1, Qt.AlignTop)
+                    else:
+                        h_layout.addWidget(widget, 1)
                 
                 parent_layout.addLayout(h_layout)
 

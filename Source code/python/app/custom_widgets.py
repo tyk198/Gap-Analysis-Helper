@@ -2,7 +2,7 @@ import os
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QLineEdit, QPushButton, QFileDialog, QVBoxLayout, 
-    QTreeWidget, QTreeWidgetItem, QFrame, QLabel
+    QTreeWidget, QTreeWidgetItem, QFrame, QLabel, QStyle
 )
 
 class PathSelectorWidget(QWidget):
@@ -15,7 +15,11 @@ class PathSelectorWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.line_edit = QLineEdit()
-        self.button = QPushButton("...")
+        self.button = QPushButton()
+        if self.selection_mode == 'folder':
+            self.button.setIcon(self.style().standardIcon(QStyle.SP_DirOpenIcon))
+        else:
+            self.button.setIcon(self.style().standardIcon(QStyle.SP_FileIcon))
         self.button.setFixedWidth(30)
 
         layout.addWidget(self.line_edit)
@@ -50,14 +54,10 @@ class FoilsSelectorWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Folders"])
+        self.tree.setHeaderHidden(True)
         self.tree.itemChanged.connect(self._handle_item_changed)
-        self.tree.setMinimumHeight(300) # Set a larger minimum height
+        self.tree.setMinimumHeight(250)
         layout.addWidget(self.tree)
-
-        self.refresh_button = QPushButton("Refresh List")
-        self.refresh_button.clicked.connect(self.repopulate_tree)
-        layout.addWidget(self.refresh_button)
 
     def set_data_path(self, path: str, selections: dict):
         self._data_path = path

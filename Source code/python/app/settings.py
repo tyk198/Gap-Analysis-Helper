@@ -72,6 +72,11 @@ class DakarSettings:
         }
     )
 
+    foils_to_plot : Dict =  field(
+        default_factory=dict,
+        metadata={"label": "Foils to Plot", "widget_type": "foils_selector"}
+    )
+
     excel_folder: str = field(
         default=r'result/csv',
         metadata={
@@ -118,11 +123,6 @@ class DakarSettings:
     max_fm_size: int = field(
         default=700,
         metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size", "layout_group": "fm_size"}
-    )
-
-    foils_to_plot : Dict =  field(
-        default_factory=dict,
-        metadata={"label": "Foils to Plot", "widget_type": "foils_selector"}
     )
 
     crop_FM_classify_top_bottom :crop_FM_classify_top_bottom_Settings = field(
