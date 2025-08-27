@@ -1,15 +1,15 @@
 
 from datetime import datetime
 from Dakar import Dakar
-from app.settings import load_settings_from_json
+from app.settings_service import SettingsService
+#from app.settings import load_from_json
 
 def main():
-    
-    settings = load_settings_from_json(r'python\app\settings.json')
+    settings_service = SettingsService()
+    settings = settings_service.load_from_json(r'python\app\settings.json')
     dakar = Dakar(settings)
 
     start_time = datetime.now()
-    
     dakar.combine_csv()
     dakar.crop_FM_classify_top_bottom_from_excel(start_row=0, end_row=None)
 

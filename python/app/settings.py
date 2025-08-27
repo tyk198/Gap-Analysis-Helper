@@ -86,7 +86,7 @@ class DakarSettings:
         }
     )
 
-    excel_file_name: str = field(
+    analysis_name: str = field(
         default=r'Gap Analysis',
         metadata={
             "tooltip": "The excel file name", 
@@ -215,20 +215,32 @@ class MasterSettings:
         metadata={"visible_in_ui": False}
     )
 
-
-def load_settings_from_json(file_path: str = 'settings.json') -> MasterSettings:
-    """
-    Loads settings from a JSON file, using defaults for missing or invalid fields.
-    """
+from dataclasses import fields, is_dataclass, asdict
+def load_from_json(file_path: str) -> MasterSettings:
+    """Loads settings from a JSON file and returns a new MasterSettings instance."""
     try:
         with open(file_path, 'r') as f:
             data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        print("Error loading settings: using default settings instead")
+        print(f"Successfully loaded settings from {file_path}")
+    except FileNotFoundError:
+        print("settings file not found, use default settings")
         return MasterSettings()
-
+    except json.JSONDecodeError:
+        print(f"Error decoding JSON from {file_path}, using default settings instead.")
+        return MasterSettings()
     
-    print(f"Successfully loaded JSON settings from {os.path.abspath(file_path)}")
-    return from_dict(data_class=MasterSettings, data=data, config=Config(strict=False))
+    def create_from_dict(cls, data_dict):
+        field_names = {f.name for f in fields(cls)}
+        filtered_data = {k: v for k, v in data_dict.items() if k in field_names}
+        
+        for f in fields(cls):
+            if is_dataclass(f.type) and f.name in filtered_data:
+                filtered_data[f.name] = create_from_dict(f.type, filtered_data[f.name])
+        
+        return cls(**filtered_data)
+
+    return create_from_dict(MasterSettings, data)
+
+
 
 

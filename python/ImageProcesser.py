@@ -34,11 +34,11 @@ class ImageProcesser:
             np.ndarray | list[np.ndarray]: The loaded image or a list of loaded images.
         """
         if isinstance(file_path, str):
-            # Read a single image
             return cv2.imread(file_path)
-        else:
-            # Read a list of images using a list comprehension
-            return [cv2.imread(fp) for fp in file_path]
+        
+        img1 = cv2.imread(file_path[0])
+        img2 = cv2.imread(file_path[1])
+        return img1, img2
     
     @staticmethod
     #@log_time

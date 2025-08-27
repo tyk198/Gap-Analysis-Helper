@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QTreeWidget, QTreeWidgetItem, QComboBox, QFrame
 )
 
-from custom_widgets import PathSelectorWidget, FoilsSelectorWidget, CollapsibleSection
+from .custom_widgets import PathSelectorWidget, FoilsSelectorWidget, CollapsibleSection
 
 SECTION_COLORS = ["#E6F1F6", "#E6F6E8", "#F6F3E6", "#F6E6E6", "#F1E6F6", "#F6E6F1"]
 

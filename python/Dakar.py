@@ -1,35 +1,36 @@
-from numpy import full
 import pandas as pd
 from app.settings import MasterSettings
 from ImageProcesser import ImageProcesser
 from Plotter import Plotter
-from ExcelProcesser import ExcelProcesser
 import os
-import openpyxl
 from datetime import datetime
-
 
 class Dakar:
     """
     Orchestrates data loading and classification from a single MasterSettings object.
     """
     def __init__(self, settings: MasterSettings):
-
-        self.settings = settings
         
-        self.excel_folder =self.settings.Dakar.excel_folder
-        os.makedirs(self.excel_folder, exist_ok=True)
-        self.excel_file_name =self.settings.Dakar.excel_file_name + '.xlsx'
-        self.excel_path = os.path.join(self.excel_folder,self.excel_file_name)
-        self.raw_image_folder_path = self.settings.Dakar.data
+        self.settings = settings
 
-        self.ExcelProcesser = ExcelProcesser()
+        save_folder = self.settings.Dakar.save_folder
+        analysis_name = self.settings.Dakar.analysis_name
+        self.save_folder = os.path.join(save_folder,analysis_name)
+        os.makedirs(self.save_folder, exist_ok=True)
+
+
+        self.excel_file_name =self.settings.Dakar.analysis_name + '.xlsx'
+        self.excel_path = os.path.join(self.save_folder,self.excel_file_name)
+
+        self.raw_image_folder_path = self.settings.Dakar.data
 
     def combine_csv(self):
         """
         Finds and combines CSV files based on the foils_to_plot setting,
         and adds calculated columns.
         """
+
+
         foils_to_plot = self.settings.Dakar.foils_to_plot
         raw_data_folder = self.settings.Dakar.data
 
@@ -103,19 +104,15 @@ class Dakar:
         df = pd.read_excel(self.excel_path)
         self.ImageProcesser = ImageProcesser(df)
 
-        save_folder = self.settings.Dakar.save_folder
-        save_folder = os.path.join(save_folder,"Combined white and red images")
+        save_folder = os.path.join(self.save_folder,"Combined white and red images")
         os.makedirs(save_folder, exist_ok=True)
 
         excluded_fovs = self.settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs
         
-
-        # Slice the dataframe
         df_slice = df.iloc[start_row:end_row]
         mask_fov = ~df_slice['FOV NUMBER'].isin(excluded_fovs)
         df_to_process = df_slice[mask_fov].copy()  # Avoid SettingWithCopyWarning
         
-        # Add a column for the hyperlink
         hyperlink_header = "WHITE RED IMAGE HYPERLINK"
         df_to_process[hyperlink_header] = ''
         df_to_process["TOP BOTTOM"] = ''
@@ -149,7 +146,7 @@ class Dakar:
                             combined_img = self.ImageProcesser._resize_keep_aspect(combined_img)
                         
                             title_string = f'{row_id}_{state}_{name}\nFOV Number: {fov_number}\nx: {x} y: {y}\nFMsize: {fm_size}'
-                            file_name = row_id + " " + f'{state} {name} {fov} FOV Number_{fov_number} X_{x} Y_{y} FMsize_{fm_size}'
+                            file_name = row_id + " " + f'{state} {name} FOV Number_{fov_number} X_{x} Y_{y} FMsize_{fm_size}'
                             image_absolute_path = os.path.join(save_folder, file_name)
                             combined_img = self.ImageProcesser._overlay_text(title_string,combined_img,"top-left")
 
@@ -174,7 +171,8 @@ class Dakar:
             start_row (int): Starting row index for CSV processing.
             end_row (int, optional): Ending row index for CSV processing. Defaults to None (process all rows).
         """
-        image_output_folder = self.settings.Dakar.crop_FM_check_background_fm.image_output_folder
+        save_folder = os.path.join(self.save_folder,"Combined different foil images")
+        os.makedirs(save_folder, exist_ok=True)
 
         df = pd.read_excel(self.excel_path)
         self.ImageProcesser = ImageProcesser(df)
@@ -210,8 +208,8 @@ class Dakar:
                         file_name = row_id + " " + f'{state} {name} FOV Number_{fov_number} X_{x} Y_{y} FMsize_{fm_size}'
                         combined_img = self.ImageProcesser._overlay_text(title_string,combined_img,"top-left")
 
-                        image_absolute_path = os.path.join(image_output_folder, file_name)
-                        self.ImageProcesser._save_image_to_folder(image_output_folder,combined_img ,file_name)
+                        image_absolute_path = os.path.join(save_folder, file_name)
+                        self.ImageProcesser._save_image_to_folder(save_folder,combined_img ,file_name)
 
                         image_absolute_path = os.path.abspath(image_absolute_path + ".png")
                         df.loc[index, hyperlink_header] = f'=HYPERLINK("{image_absolute_path}", "View")'
@@ -224,12 +222,16 @@ class Dakar:
 
 
 
-
-
-
     def plot_compare_FM_summary(self):
-        self.Plotter = Plotter(self.data,self.settings.plotter)
-        output_folder = self.settings.Dakar.plot_compare_FM_summary.output_folder
+        df = pd.read_excel(self.excel_path)
+
+        self.Plotter = Plotter(df,self.settings.plotter)
+
+        save_folder = os.path.join(self.save_folder,"Plot compare FM summary")
+        os.makedirs(save_folder, exist_ok=True)
+
+        save_folder = self.settings.Dakar.crop_FM_check_background_fm.image_output_folder
+
         states_to_compare = self.settings.Dakar.plot_compare_FM_summary.states_to_compare
 
         foils_to_plot = self.data['FOIL'].unique()
@@ -243,20 +245,22 @@ class Dakar:
                 added,removed,stayed  = generated_FM_changed_plots
                 summary = self.Plotter.create_changed_summary_plot(before,after,added,removed,stayed,foil,state1,state2)
                 combined = self.ImageProcesser._combine_image_grid(before[0],after[0], summary,added[0],removed[0],stayed[0])
-                self.ImageProcesser._save_image_to_folder(output_folder,combined,foil+' '+ state1+" to "+state2 + ' summary')
+                self.ImageProcesser._save_image_to_folder(save_folder,combined,foil+' '+ state1+" to "+state2 + ' summary')
 
     def plot_FM_summary(self):
+
+        save_folder = os.path.join(self.save_folder,"Plot FM summary")
+        os.makedirs(save_folder, exist_ok=True)
         df = pd.read_excel(self.excel_path)
+
         self.ImageProcesser = ImageProcesser(df)
         self.Plotter = Plotter(df,self.settings.plotter)
 
-
-        output_folder = self.settings.Dakar.plot_FM_summary.image_output_folder
         foils_to_plot = self.settings.Dakar.foils_to_plot
         for state, foils in foils_to_plot.items():
       
             for foil in foils:
                 generated_plot = self.Plotter.create_FM_position_plot(state,foil)
-                self.ImageProcesser._save_image_to_folder(output_folder,generated_plot[0],state + " " + foil + ' plot')
+                self.ImageProcesser._save_image_to_folder(save_folder,generated_plot[0],state + " " + foil + ' plot')
                 print(f"Plotted {state} {foil}")
 

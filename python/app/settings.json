@@ -1,9 +1,13 @@
 {
     "Dakar": {
         "data": "C:/Users/E1009132/Documents/MyDocument/Data_analysis/FM_top_down_classify/data/Raw data",
-        "foils_to_plot": {},
+        "foils_to_plot": {
+            "IncomingState": [
+                "incomingfoil1"
+            ]
+        },
         "excel_folder": "result/csv",
-        "excel_file_name": "Gap Analysis",
+        "analysis_name": "Run1",
         "save_folder": "result",
         "image_width": "66320",
         "image_height": "55080",
@@ -12,7 +16,6 @@
         "crop_FM_classify_top_bottom": {
             "image_output_folder": "result\\images\\white_red_combined",
             "excluded_fovs": [
-                26,
                 29
             ]
         },

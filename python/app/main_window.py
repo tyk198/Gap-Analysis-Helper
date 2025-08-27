@@ -4,10 +4,10 @@ from PySide6.QtWidgets import (
     QPushButton, QScrollArea, QFileDialog, QMessageBox
 )
 
-from settings import MasterSettings
-from settings_service import SettingsService
-from ui_builder import SettingsUIBuilder
-from custom_widgets import PathSelectorWidget, FoilsSelectorWidget
+from .settings import MasterSettings
+from .settings_service import SettingsService
+from .ui_builder import SettingsUIBuilder
+from .custom_widgets import PathSelectorWidget, FoilsSelectorWidget
 
 class MainWindow(QMainWindow):
     """The main application window for the Settings Editor."""

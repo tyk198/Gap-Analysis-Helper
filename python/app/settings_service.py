@@ -5,8 +5,8 @@ from typing import Any, Dict, List, List
 from PySide6.QtWidgets import QWidget, QComboBox, QLineEdit, QTreeWidget, QTreeWidgetItem
 from PySide6.QtCore import Qt
 
-from settings import MasterSettings
-from custom_widgets import PathSelectorWidget, FoilsSelectorWidget
+from .settings import MasterSettings
+from .custom_widgets import PathSelectorWidget, FoilsSelectorWidget
 import os
 
 class SettingsService:
@@ -14,8 +14,16 @@ class SettingsService:
 
     def load_from_json(self, file_path: str) -> MasterSettings:
         """Loads settings from a JSON file and returns a new MasterSettings instance."""
-        with open(file_path, 'r') as f:
-            data = json.load(f)
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            print(f"Successfully loaded settings from {file_path}")
+        except FileNotFoundError:
+            print("settings file not found, use default settings")
+            return MasterSettings()
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON from {file_path}, using default settings instead.")
+            return MasterSettings()
         
         def create_from_dict(cls, data_dict):
             field_names = {f.name for f in fields(cls)}

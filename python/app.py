@@ -1,15 +1,15 @@
 import sys
 from PySide6.QtWidgets import QApplication
 
-from settings import MasterSettings
-from main_window import MainWindow
+from app.settings_service import SettingsService
+from app.main_window import MainWindow
 
 def main():
     """Main function to run the application."""
     app = QApplication(sys.argv)
     
-    # Create the initial settings object from the defaults in settings.py
-    initial_settings = MasterSettings()
+    settings_service = SettingsService()
+    initial_settings = settings_service.load_from_json('python/app/settings.json')
 
     editor = MainWindow(settings=initial_settings)
     editor.show()
