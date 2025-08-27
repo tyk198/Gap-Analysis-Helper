@@ -115,10 +115,7 @@ class DakarSettings:
     )
 
     foils_to_plot : Dict =  field(
-        default_factory = lambda: {
-            "IncomingState": ["incomingfoil1","incomingfoil2","incomingfoil3","incomingfoil4","incomingfoil5"],
-            "ManualDetachState": ["ManualDetach1","ManualDetach2","ManualDetach3","ManualDetach4","ManualDetach5"]
-        },
+        default_factory=dict,
         metadata={"label": "Foils to Plot", "widget_type": "foils_selector"}
     )
 
