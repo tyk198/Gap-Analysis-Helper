@@ -7,62 +7,16 @@ from dacite import from_dict, Config
 @dataclass
 class crop_FM_classify_top_bottom_Settings:
 
-    image_output_folder: str = field(
-        default=r'result\images\white_red_combined',
-        metadata={
-            "tooltip": "Path to the folder containing cropped and combined images", 
-            "setting_type": "folder",
-            "label": "Image Output Folder"
-        }
-    )
+
     excluded_fovs: List = field(
         default_factory=lambda: [25, 26, 29, 30],
         metadata={"tooltip": "List of FOV numbers to exclude", "label": "Excluded FOVs"}
     )
 
-@dataclass
-class crop_FM_check_background_fm_settings:
-
-    image_output_folder: str = field(
-        default=r'result\images\Different_foil_combined',
-        metadata={
-            "tooltip": "Path to the folder containing cropped and combined images", 
-            "setting_type": "folder",
-            "label": "Image Output Folder"
-        }
-    )
-
-@dataclass
-class plot_FM_summary_settings:
-
-    image_output_folder: str = field(
-        default=r'result\images\FM_plot',
-        metadata={
-            "tooltip": "Path to the folder containing cropped and combined images", 
-            "setting_type": "folder",
-            "label": "Image Output Folder"
-        }
-    )
-
-
-
-@dataclass
-class plot_complete_FM_summary_settings:
-
-    output_folder: str = field(
-        default=r'result\images\ComparePlot',
-        metadata={
-            "tooltip": "Path to the folder containing complete FM summary files", 
-            "setting_type": "folder",
-            "label": "Output Folder"
-        }
-    )
 
 @dataclass
 class DakarSettings:
     
-    
-
     data: str = field(
         default=r'data/Raw data',
         metadata={
@@ -128,21 +82,6 @@ class DakarSettings:
     crop_FM_classify_top_bottom :crop_FM_classify_top_bottom_Settings = field(
         default_factory=crop_FM_classify_top_bottom_Settings,
         metadata={"label": "Crop for Top/Bottom Classification"}
-    )
-
-    crop_FM_check_background_fm:crop_FM_check_background_fm_settings = field(
-        default_factory=crop_FM_check_background_fm_settings,
-        metadata={"label": "Crop for Background FM Check"}
-    )
-
-    plot_compare_FM_summary :plot_complete_FM_summary_settings = field(
-        default_factory=plot_complete_FM_summary_settings,
-        metadata={"label": "Plot Complete FM Summary"}
-    )
-
-    plot_FM_summary: plot_FM_summary_settings = field(
-        default_factory=plot_FM_summary_settings,
-        metadata={"label": "Plot FM Summary"}
     )
 
 @dataclass

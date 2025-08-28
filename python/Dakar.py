@@ -230,7 +230,6 @@ class Dakar:
         save_folder = os.path.join(self.save_folder,"Plot compare FM summary")
         os.makedirs(save_folder, exist_ok=True)
 
-        save_folder = self.settings.Dakar.crop_FM_check_background_fm.image_output_folder
 
         states_to_compare = self.settings.Dakar.plot_compare_FM_summary.states_to_compare
 
