@@ -162,7 +162,7 @@ def load_from_json(file_path: str) -> MasterSettings:
     
     def create_from_dict(cls, data_dict):
         field_names = {f.name for f in fields(cls)}
-        filtered_data = {k: v for k, v in data_dict.items() if k in field_names}
+        filtered_.data = {k: v for k, v in data_dict.items() if k in field_names}
         
         for f in fields(cls):
             if is_dataclass(f.type) and f.name in filtered_data:
@@ -171,7 +171,3 @@ def load_from_json(file_path: str) -> MasterSettings:
         return cls(**filtered_data)
 
     return create_from_dict(MasterSettings, data)
-
-
-
-

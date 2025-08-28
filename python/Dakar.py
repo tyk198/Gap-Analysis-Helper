@@ -12,7 +12,6 @@ class Dakar:
     def __init__(self, settings: MasterSettings):
         
         self.settings = settings
- my
         save_folder = self.settings.Dakar.save_folder
         analysis_name = self.settings.Dakar.analysis_name
         self.save_folder = os.path.join(save_folder,analysis_name)

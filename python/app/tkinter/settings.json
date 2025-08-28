@@ -1,0 +1,92 @@
+{
+    "Dakar": {
+        "data": "data",
+        "foils_to_plot": {},
+        "analysis_name": "Run2",
+        "save_folder": "result",
+        "image_width": "66320",
+        "image_height": "55080",
+        "min_fm_size": 100,
+        "max_fm_size": 700,
+        "crop_FM_classify_top_bottom": {
+            "excluded_fovs": [
+                29
+            ]
+        }
+    },
+    "plotter": {
+        "background_image_path": "data/original_resize.jpg",
+        "figure": {
+            "figsize": [
+                17,
+                12
+            ],
+            "margin_left": 0.15
+        },
+        "legend": {
+            "location": "upper left",
+            "anchor": [
+                -0.15,
+                1.0
+            ],
+            "fontsize": 12,
+            "title": "Legend",
+            "title_fontsize": 14
+        },
+        "points": {
+            "marker_size": 80.0,
+            "bottom_color": "blue",
+            "top_color": "red"
+        },
+        "shape_mapping": {
+            "triangle": {
+                "label": "100-200",
+                "marker": "^",
+                "min_size": 100,
+                "max_size": 200
+            },
+            "square": {
+                "label": "200-300",
+                "marker": "s",
+                "min_size": 200,
+                "max_size": 300
+            },
+            "pentagon": {
+                "label": "300-400",
+                "marker": "p",
+                "min_size": 300,
+                "max_size": 400
+            },
+            "hexagon": {
+                "label": "400-500",
+                "marker": "h",
+                "min_size": 400,
+                "max_size": 500
+            },
+            "octagon": {
+                "label": "500-600",
+                "marker": "8",
+                "min_size": 500,
+                "max_size": 600
+            },
+            "other": {
+                "label": " >600",
+                "marker": "o",
+                "min_size": null,
+                "max_size": null
+            }
+        },
+        "summary_text": {
+            "location": [
+                -0.15,
+                0.65
+            ],
+            "fontsize": 12,
+            "box_props": {
+                "alpha": 0.7,
+                "boxstyle": "round,pad=0.5",
+                "facecolor": "white"
+            }
+        }
+    }
+}

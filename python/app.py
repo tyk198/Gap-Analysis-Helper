@@ -8,12 +8,10 @@ def main():
     """Main function to run the application."""
     app = QApplication(sys.argv)
     
-    # Set the application icon
     app.setWindowIcon(QIcon('python/app/icon.ico'))
     
     settings_service = SettingsService()
     initial_settings = settings_service.load_from_json('python/app/settings.json')
-
     editor = MainWindow(settings=initial_settings)
     editor.show()
 

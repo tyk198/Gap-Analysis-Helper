@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator, QDoubleValidator
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, 
-    QTreeWidget, QTreeWidgetItem, QComboBox, QFrame
+    QTreeWidget, QTreeWidgetItem, QComboBox, QFrame, QSizePolicy
 )
 
 from .custom_widgets import PathSelectorWidget, FoilsSelectorWidget, CollapsibleSection
@@ -26,42 +26,39 @@ class SettingsUIBuilder:
     def _create_ui_from_dataclass(self, dc_instance: Any, parent_layout: QVBoxLayout, base_key: str, level: int):
         """Recursively generates UI elements for a dataclass instance."""
         
-        # This import is fine here as it's only used in this method.
-        from collections import OrderedDict
+        main_h_layout = QHBoxLayout()
+        left_layout = QVBoxLayout()
+        right_layout = QVBoxLayout()
 
-        # Group fields by layout_group or use field name for ungrouped fields
-        grouped_fields = OrderedDict()
-        
+        main_h_layout.addLayout(left_layout, 1)
+        main_h_layout.addLayout(right_layout, 2)
+
+        parent_layout.addLayout(main_h_layout)
+
+        processed_groups = set()
+
         for f in fields(dc_instance):
             if not f.metadata.get("visible_in_ui", True):
                 continue
-            
-            group = f.metadata.get("layout_group")
-            if group is None:
-                # Use field name as group name for single-field rows to maintain order
-                group = f.name 
-            
-            if group not in grouped_fields:
-                grouped_fields[group] = []
-            grouped_fields[group].append(f)
 
-        for group_name, fields_in_group in grouped_fields.items():
-            # Check if the group is a dataclass
-            is_dc = is_dataclass(getattr(dc_instance, fields_in_group[0].name))
+            layout_group = f.metadata.get("layout_group")
+
+            if layout_group and layout_group in processed_groups:
+                continue
+
+            is_dc = is_dataclass(f.type)
 
             if is_dc:
-                # Handle dataclass sections (always one per row)
-                f = fields_in_group[0]
                 key = f"{base_key}.{f.name}"
                 value = getattr(dc_instance, f.name)
                 tooltip = f.metadata.get("tooltip", f.name)
                 label_text = f.metadata.get("label", f.name)
 
-                if level >= 0:  # Inner sections are collapsible and colored
+                if level >= 0:
                     color = SECTION_COLORS[level % len(SECTION_COLORS)]
                     section_container = CollapsibleSection(label_text, color)
                     content_layout = section_container.contentLayout()
-                else:  # Top-level section is just a plain container
+                else:
                     section_container = QFrame()
                     section_container.setFrameShape(QFrame.NoFrame)
                     content_layout = QVBoxLayout(section_container)
@@ -71,35 +68,58 @@ class SettingsUIBuilder:
                 parent_layout.addWidget(section_container)
                 self._create_ui_from_dataclass(value, content_layout, key, level + 1)
             else:
-                # Handle regular fields (can be grouped in a row)
                 h_layout = QHBoxLayout()
-                for f in fields_in_group:
-                    key = f"{base_key}.{f.name}"
-                    value = getattr(dc_instance, f.name)
-                    tooltip = f.metadata.get("tooltip", f.name)
-                    setting_type = f.metadata.get("setting_type")
-                    widget_type = f.metadata.get("widget_type")
-                    label_text = f.metadata.get("label", f.name)
+                
+                if layout_group:
+                    processed_groups.add(layout_group)
+                    group_fields = [field for field in fields(dc_instance) if field.metadata.get("layout_group") == layout_group]
+                else:
+                    group_fields = [f]
+
+                for field_in_group in group_fields:
+                    key = f"{base_key}.{field_in_group.name}"
+                    value = getattr(dc_instance, field_in_group.name)
+                    tooltip = field_in_group.metadata.get("tooltip", field_in_group.name)
+                    setting_type = field_in_group.metadata.get("setting_type")
+                    widget_type = field_in_group.metadata.get("widget_type")
+                    widget_style = field_in_group.metadata.get("widget_style")
+                    label_text = field_in_group.metadata.get("label", field_in_group.name)
 
                     label = QLabel(f"{label_text}:")
                     label.setToolTip(tooltip)
-                    h_layout.addWidget(label)
 
-                    widget = self._create_widget_for_value(value, tooltip, setting_type, widget_type)
+                    widget = self._create_widget_for_value(value, tooltip, setting_type, widget_type, widget_style)
                     self.widget_map[key] = widget
-                    if widget_type == "foils_selector":
-                        h_layout.addWidget(widget, 1, Qt.AlignTop)
+
+                    if widget_style == "icon_only":
+                        h_layout.addWidget(label)
+                        h_layout.addWidget(widget)
+                        h_layout.addStretch()
+                    elif widget_type == "foils_selector":
+                        v_layout = QVBoxLayout()
+                        v_layout.addWidget(label)
+                        v_layout.addWidget(widget)
+                        h_layout.addLayout(v_layout)
                     else:
+                        h_layout.addWidget(label)
                         h_layout.addWidget(widget, 1)
                 
-                parent_layout.addLayout(h_layout)
+                if layout_group == "left":
+                    left_layout.addLayout(h_layout)
+                elif layout_group == "right" or layout_group in ["image_size", "fm_size"]:
+                    right_layout.addLayout(h_layout)
+                elif not layout_group:
+                    right_layout.addLayout(h_layout)
 
-    def _create_widget_for_value(self, value: Any, tooltip: str, setting_type: str | None, widget_type: str | None) -> QWidget:
+
+    def _create_widget_for_value(self, value: Any, tooltip: str, setting_type: str | None, widget_type: str | None, widget_style: str | None) -> QWidget:
         widget: QWidget
         if widget_type == "foils_selector":
             widget = FoilsSelectorWidget()
+            widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         elif setting_type in ["folder", "file"]:
-            widget = PathSelectorWidget(selection_mode=setting_type)
+            icon_only = widget_style == "icon_only"
+            widget = PathSelectorWidget(selection_mode=setting_type, icon_only=icon_only)
             widget.setText(str(value))
         elif isinstance(value, bool):
             widget = QComboBox()

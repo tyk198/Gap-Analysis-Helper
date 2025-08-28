@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 
 class PathSelectorWidget(QWidget):
     """A widget with a line edit and a button to select a file or folder."""
-    def __init__(self, selection_mode: str = 'file', parent: QWidget = None):
+    def __init__(self, selection_mode: str = 'file', parent: QWidget = None, icon_only: bool = False):
         super().__init__(parent)
         self.selection_mode = selection_mode
 
@@ -22,7 +22,8 @@ class PathSelectorWidget(QWidget):
             self.button.setIcon(self.style().standardIcon(QStyle.SP_FileIcon))
         self.button.setFixedWidth(30)
 
-        layout.addWidget(self.line_edit)
+        if not icon_only:
+            layout.addWidget(self.line_edit)
         layout.addWidget(self.button)
 
         self.button.clicked.connect(self.open_dialog)
