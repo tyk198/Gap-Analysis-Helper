@@ -4,11 +4,15 @@ from tkinter import ttk, filedialog
 
 class PathSelectorWidget(tk.Frame):
     """A widget with an entry and a button to select a file or folder."""
-    def __init__(self, parent, selection_mode: str = 'file', icon_only: bool = False):
+    def __init__(self, parent, selection_mode: str = 'file', icon_only: bool = False, command=None):
         super().__init__(parent)
         self.selection_mode = selection_mode
+        self.command = command
 
-        self.entry = tk.Entry(self)
+        self.path_var = tk.StringVar()
+        self.path_var.trace_add("write", self._on_path_change)
+
+        self.entry = tk.Entry(self, textvariable=self.path_var)
         self.button = tk.Button(self, text="...", command=self.open_dialog)
 
         if not icon_only:
@@ -17,34 +21,60 @@ class PathSelectorWidget(tk.Frame):
 
     def open_dialog(self):
         if self.selection_mode == 'folder':
-            path = filedialog.askdirectory(initialdir=self.entry.get())
+            path = filedialog.askdirectory(initialdir=self.get())
         else:  # 'file'
-            path = filedialog.askopenfilename(initialdir=self.entry.get())
+            path = filedialog.askopenfilename(initialdir=self.get())
         
         if path:
-            self.entry.delete(0, tk.END)
-            self.entry.insert(0, path)
+            self.set(path)
 
     def get(self) -> str:
-        return self.entry.get()
+        return self.path_var.get()
 
     def set(self, text: str):
-        self.entry.delete(0, tk.END)
-        self.entry.insert(0, text)
+        self.path_var.set(text)
+
+    def _on_path_change(self, *args):
+        if self.command:
+            self.command(self.get())
 
 class FoilsSelectorWidget(tk.Frame):
     """A tree-based widget to select folders and subfolders."""
-    def __init__(self, parent):
+    def __init__(self, parent, checked_char="\u2713", unchecked_char=""):
         super().__init__(parent)
         self._data_path = ""
         self._is_populating = False
+        self.checked_char = checked_char
+        self.unchecked_char = unchecked_char
 
         self.tree = ttk.Treeview(self, show="tree")
         self.tree.pack(fill=tk.BOTH, expand=True)
 
+        self.tree.bind("<Button-1>", self.on_click)
+
+    def on_click(self, event):
+        item_id = self.tree.identify_row(event.y)
+        if item_id:
+            text = self.tree.item(item_id, "text")
+            if text.startswith(f"[{self.unchecked_char}] "):
+                self.tree.item(item_id, text=f"[{self.checked_char}] " + text[4:])
+            elif text.startswith(f"[{self.checked_char}] "):
+                self.tree.item(item_id, text=f"[{self.unchecked_char}] " + text[4:])
+
     def set_data_path(self, path: str, selections: dict):
         self._data_path = path
         self.populate_tree(selections)
+
+    def on_click(self, event):
+        item_id = self.tree.identify_row(event.y)
+        if item_id:
+            text = self.tree.item(item_id, "text")
+            unchecked_prefix = f"[{self.unchecked_char}] "
+            checked_prefix = f"[{self.checked_char}] "
+            if text.startswith(unchecked_prefix):
+                self.tree.item(item_id, text=checked_prefix + text[len(unchecked_prefix):])
+            elif text.startswith(checked_prefix):
+                self.tree.item(item_id, text=unchecked_prefix + text[len(checked_prefix):])
 
     def populate_tree(self, selections: dict):
         self._is_populating = True
@@ -52,6 +82,9 @@ class FoilsSelectorWidget(tk.Frame):
         if not self._data_path or not os.path.isdir(self._data_path):
             self._is_populating = False
             return
+
+        unchecked_prefix = f"[{self.unchecked_char}] "
+        checked_prefix = f"[{self.checked_char}] "
 
         for folder_name in sorted(os.listdir(self._data_path)):
             folder_path = os.path.join(self._data_path, folder_name)
@@ -63,8 +96,11 @@ class FoilsSelectorWidget(tk.Frame):
                 subfolders = [d for d in sorted(os.listdir(folder_path)) if os.path.isdir(os.path.join(folder_path, d))]
                 
                 for subfolder_name in subfolders:
-                    self.tree.insert(parent_item, tk.END, text=subfolder_name, tags=("check",))
-
+                    if subfolder_name in selected_subfolders:
+                        self.tree.insert(parent_item, tk.END, text=checked_prefix + subfolder_name)
+                    else:
+                        self.tree.insert(parent_item, tk.END, text=unchecked_prefix + subfolder_name)
+        
         self._is_populating = False
 
     def get_selected_as_dict(self) -> dict:
@@ -73,9 +109,23 @@ class FoilsSelectorWidget(tk.Frame):
             parent_name = self.tree.item(parent_item, "text")
             selected_subfolders = []
             for child_item in self.tree.get_children(parent_item):
-                # This is a simplified version. Tkinter Treeview doesn't have built-in checkboxes.
-                # A more complex implementation would be needed to handle checkboxes.
-                pass
+                text = self.tree.item(child_item, "text")
+                checked_prefix = f"[{self.checked_char}] "
+                if text.startswith(checked_prefix):
+                    selected_subfolders.append(text[len(checked_prefix):])
+            if selected_subfolders:
+                selections[parent_name] = selected_subfolders
+        return selections
+
+    def get_selected_as_dict(self) -> dict:
+        selections = {}
+        for parent_item in self.tree.get_children():
+            parent_name = self.tree.item(parent_item, "text")
+            selected_subfolders = []
+            for child_item in self.tree.get_children(parent_item):
+                text = self.tree.item(child_item, "text")
+                if text.startswith(f"[{self.checked_char}]"):
+                    selected_subfolders.append(text[4:])
             if selected_subfolders:
                 selections[parent_name] = selected_subfolders
         return selections
