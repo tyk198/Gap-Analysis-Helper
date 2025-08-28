@@ -1,13 +1,13 @@
 {
     "Dakar": {
-        "data": "E:/code project",
+        "data": "C:/Users/User/OneDrive/Documents",
         "foils_to_plot": {},
         "analysis_name": "Run1",
         "save_folder": "result",
         "image_width": "66320",
         "image_height": "55080",
         "min_fm_size": 100,
-        "max_fm_size": 7001,
+        "max_fm_size": 700,
         "crop_FM_classify_top_bottom": {
             "excluded_fovs": []
         }

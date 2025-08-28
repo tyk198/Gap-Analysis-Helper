@@ -6,7 +6,7 @@ from app.settings_service import SettingsService
 
 def main():
     settings_service = SettingsService()
-    settings = settings_service.load_from_json(r'python\app\settings.json')
+    settings = settings_service.load_from_json(r'python\tkinter_app\settings.json')
     dakar = Dakar(settings)
 
     start_time = datetime.now()
