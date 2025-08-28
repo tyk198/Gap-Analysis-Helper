@@ -1,7 +1,7 @@
 import os
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QScrollArea, QFileDialog, QMessageBox
+    QPushButton, QScrollArea, QMessageBox
 )
 
 from .settings import MasterSettings
@@ -19,7 +19,7 @@ class MainWindow(QMainWindow):
         self.ui_builder = SettingsUIBuilder()
         self.widget_map = {}
 
-        self.setWindowTitle("Settings Editor")
+        self.setWindowTitle("Osram Vision Tool - Gap Analysis Assistant")
         self.setGeometry(100, 100, 800, 600)
 
         self.main_widget = QWidget()
@@ -53,15 +53,11 @@ class MainWindow(QMainWindow):
         self._connect_dependent_widgets()
 
     def _setup_buttons(self):
-        """Creates and configures the Save and Load buttons."""
+        """Creates and configures the Save button."""
         button_layout = QHBoxLayout()
         self.main_layout.addLayout(button_layout)
 
-        load_button = QPushButton("Load from JSON")
-        load_button.clicked.connect(self._load_settings)
-        button_layout.addWidget(load_button)
-
-        save_button = QPushButton("Save to JSON")
+        save_button = QPushButton("Save settings")
         save_button.clicked.connect(self._save_settings)
         button_layout.addWidget(save_button)
 
@@ -78,19 +74,6 @@ class MainWindow(QMainWindow):
             data_path_widget.line_edit.textChanged.connect(
                 lambda text: foils_selector.set_data_path(text, {})
             )
-
-    def _load_settings(self):
-        """Loads settings from a JSON file and updates the GUI."""
-        file_path, _ = QFileDialog.getOpenFileName(self, "Load Settings", "", "JSON Files (*.json)")
-        if not file_path:
-            return
-
-        try:
-            self.settings_obj = self.settings_service.load_from_json(file_path)
-            self._build_ui()
-            QMessageBox.information(self, "Success", f"Settings loaded from {file_path}")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to load settings: {e}")
 
     def _save_settings(self):
         """Saves the current GUI state to a hardcoded JSON file."""

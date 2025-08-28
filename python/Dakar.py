@@ -12,7 +12,7 @@ class Dakar:
     def __init__(self, settings: MasterSettings):
         
         self.settings = settings
-
+ my
         save_folder = self.settings.Dakar.save_folder
         analysis_name = self.settings.Dakar.analysis_name
         self.save_folder = os.path.join(save_folder,analysis_name)
@@ -30,10 +30,8 @@ class Dakar:
         and adds calculated columns.
         """
 
-
         foils_to_plot = self.settings.Dakar.foils_to_plot
         raw_data_folder = self.settings.Dakar.data
-
         all_dfs = []
 
         for state, foils in foils_to_plot.items():

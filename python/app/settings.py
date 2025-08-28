@@ -3,6 +3,8 @@ from typing import Dict, Any,List
 import os 
 import json
 from dacite import from_dict, Config
+from dataclasses import fields, is_dataclass, asdict
+
 
 @dataclass
 class crop_FM_classify_top_bottom_Settings:
@@ -18,9 +20,9 @@ class crop_FM_classify_top_bottom_Settings:
 class DakarSettings:
     
     data: str = field(
-        default=r'data/Raw data',
+        default=r'data',
         metadata={
-            "tooltip": "Path to the general data folder",
+            "tooltip": "Folder path containing all the necceasry images and csv files needed for analysis",
             "setting_type": "folder",
             "label": "Raw Data Folder"
         }
@@ -31,35 +33,22 @@ class DakarSettings:
         metadata={"label": "Foils to Plot", "widget_type": "foils_selector"}
     )
 
-    excel_folder: str = field(
-        default=r'result/csv',
-        metadata={
-            "tooltip": "Path to the Combined Excel file for Dakar data", 
-            "setting_type": "folder",
-            "label": "Excel Path"
-        }
-    )
-
     analysis_name: str = field(
         default=r'Gap Analysis',
         metadata={
-            "tooltip": "The excel file name", 
-            "label": "Excel file name"
+            "tooltip": "The analysis name", 
+            "label": "Analysis name"
         }
     )
 
     save_folder: str = field(
         default=r'result',
         metadata={
-            "tooltip": "The folder to save all the combined images and plot", 
+            "tooltip": "Folder for all  the combined images, and plotted summary of analysis", 
             "setting_type": "folder",
-            "label": "Save folder"
+            "label": "Result folder"
         }
     )
-
-
-
-
 
     image_width: str = field(
         default=66320,
@@ -154,7 +143,6 @@ class MasterSettings:
         metadata={"visible_in_ui": False}
     )
 
-from dataclasses import fields, is_dataclass, asdict
 def load_from_json(file_path: str) -> MasterSettings:
     """Loads settings from a JSON file and returns a new MasterSettings instance."""
     try:

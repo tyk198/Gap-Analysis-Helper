@@ -1,12 +1,7 @@
 {
     "Dakar": {
         "data": "C:/Users/E1009132/Documents/MyDocument/Data_analysis/FM_top_down_classify/data/Raw data",
-        "foils_to_plot": {
-            "IncomingState": [
-                "incomingfoil1"
-            ]
-        },
-        "excel_folder": "result/csv",
+        "foils_to_plot": {},
         "analysis_name": "Run1",
         "save_folder": "result",
         "image_width": "66320",
@@ -14,19 +9,7 @@
         "min_fm_size": 100,
         "max_fm_size": 700,
         "crop_FM_classify_top_bottom": {
-            "image_output_folder": "result\\images\\white_red_combined",
-            "excluded_fovs": [
-                29
-            ]
-        },
-        "crop_FM_check_background_fm": {
-            "image_output_folder": "result\\images\\Different_foil_combined"
-        },
-        "plot_compare_FM_summary": {
-            "output_folder": "result\\images\\ComparePlot"
-        },
-        "plot_FM_summary": {
-            "image_output_folder": "result\\images\\FM_plot"
+            "excluded_fovs": []
         }
     },
     "plotter": {
