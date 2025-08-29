@@ -63,9 +63,24 @@ class DakarSettings:
         metadata={"label": "Foils to Plot", "widget_type": "foils_selector", "layout_group": "row3_left"}
     )
 
-    states_to_compare : Dict =  field(
-        default_factory=dict,
-        metadata={"label": "State to compare", "widget_type": "state_selector", "layout_group": "row3_right"}
+    before_state: str = field(
+        default="",
+        metadata={
+            "label": "Before State", 
+            "widget_type": "combobox", 
+            "options_source": "foils_to_plot_states",
+            "layout_group": "row3_right"
+        }
+    )
+
+    after_state: str = field(
+        default="",
+        metadata={
+            "label": "After State", 
+            "widget_type": "combobox", 
+            "options_source": "foils_to_plot_states",
+            "layout_group": "row3_right"
+        }
     )
 
 

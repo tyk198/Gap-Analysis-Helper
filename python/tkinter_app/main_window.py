@@ -36,6 +36,7 @@ class MainWindow(tk.Tk):
         self.scrollbar.pack(side="right", fill="y")
 
         self.widget_map = self.ui_builder.build_ui(self.settings, self.scrollable_frame)
+        self._convert_state_fields_to_dropdowns()  # <-- NEW: Convert before/after state fields to dropdowns
         self._connect_dependent_widgets()
 
         s = ttk.Style()
@@ -63,9 +64,43 @@ class MainWindow(tk.Tk):
         self.run_button = tk.Button(self.functions_frame, text="Run Function", command=self.run_dakar_function)
         self.run_button.pack(side=tk.RIGHT, padx=5, pady=5, anchor=tk.SE)
 
-        save_button_frame = self.widget_map.get("MasterSettings.Dakar.states_to_compare").master
-        self.save_button = tk.Button(save_button_frame, text="Save Settings", command=self.save_settings)
-        self.save_button.pack(side=tk.RIGHT, padx=5, anchor=tk.SE)
+        self.save_button = tk.Button(self.functions_frame, text="Save Settings", command=self.save_settings)
+        self.save_button.pack(side=tk.RIGHT, padx=5, pady=5, anchor=tk.SE)
+
+    def _convert_state_fields_to_dropdowns(self):
+        """Replace existing before/after state fields with dropdowns using the same geometry manager."""
+        for key in ["MasterSettings.Dakar.before_state", "MasterSettings.Dakar.after_state"]:
+            if key in self.widget_map:
+                original_widget = self.widget_map[key]
+                manager = original_widget.winfo_manager()
+                if manager == "grid":
+                    geom_info = original_widget.grid_info()
+                elif manager == "pack":
+                    geom_info = original_widget.pack_info()
+                else:
+                    geom_info = {}
+                parent = original_widget.master
+                # Destroy original widget
+                original_widget.destroy()
+                # Create new dropdown (ttk.Combobox)
+                combo = ttk.Combobox(parent, state="readonly")
+                # Use same geometry manager
+                if manager == "grid":
+                    combo.grid(**geom_info)
+                elif manager == "pack":
+                    combo.pack(**geom_info)
+                self.widget_map[key] = combo
+        # Update dropdown options once conversion is done.
+        self.update_state_dropdowns()
+
+    def update_state_dropdowns(self):
+        """Update dropdown values based on foil selections in settings."""
+        # Assuming self.settings.Dakar.foils_to_plot is a dict: { state: checked_bool, ... }
+        available_states = [state for state, checked in self.settings.Dakar.foils_to_plot.items() if checked]
+        if "MasterSettings.Dakar.before_state" in self.widget_map:
+            self.widget_map["MasterSettings.Dakar.before_state"]['values'] = available_states
+        if "MasterSettings.Dakar.after_state" in self.widget_map:
+            self.widget_map["MasterSettings.Dakar.after_state"]['values'] = available_states
 
     def run_dakar_function(self):
         selected_function_name = self.selected_function.get()
@@ -73,9 +108,8 @@ class MainWindow(tk.Tk):
             print("No function selected.")
             return
 
-        # Save current settings from UI before running function
+        # Save current settings from UI before running the function
         self.save_settings()
-        # Reload settings to ensure the dakar instance has the latest values
         self.settings = self.settings_service.load_from_json("python/tkinter_app/settings.json")
         self.dakar = Dakar(self.settings)
 
@@ -83,7 +117,15 @@ class MainWindow(tk.Tk):
             method_to_call = getattr(self.dakar, selected_function_name)
             print(f"Running {selected_function_name}...")
             try:
-                method_to_call()
+                if selected_function_name == "plot_compare_FM_summary":
+                    before_state = self.widget_map["MasterSettings.Dakar.before_state"].get()
+                    after_state = self.widget_map["MasterSettings.Dakar.after_state"].get()
+                    if not before_state or not after_state:
+                        print("Please select both before and after states.")
+                        return
+                    method_to_call(before_state, after_state)
+                else:
+                    method_to_call()
                 print(f"Successfully finished running {selected_function_name}.")
             except Exception as e:
                 print(f"An error occurred while running {selected_function_name}: {e}")

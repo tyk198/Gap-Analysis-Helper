@@ -16,7 +16,8 @@
                 "ABFoil1"
             ]
         },
-        "states_to_compare": {}
+        "before_state": false,
+        "after_state": false
     },
     "plotter": {
         "background_image_path": "background.jpg",

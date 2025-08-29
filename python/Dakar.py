@@ -250,22 +250,34 @@ class Dakar:
         save_folder = os.path.join(self.save_folder,"Plot compare FM summary")
         os.makedirs(save_folder, exist_ok=True)
 
-        states_to_compare = self.settings.Dakar.states_to_compare
-        states_to_compare = ["BeforeCutState","AfterCutState"]
+        before_state = self.settings.Dakar.before_state
+        after_state = self.settings.Dakar.after_state
 
+        if not before_state or not after_state:
+            print("Warning: Before and/or After state not selected. Skipping comparison.")
+            return
 
-        foils_to_plot = df['FOIL'].unique()
+        # Get foils from the settings that are selected for the 'before' state
+        foils_to_plot = self.settings.Dakar.foils_to_plot.get(before_state, [])
+
         for foil in foils_to_plot:
-            for i in range(len(states_to_compare) - 1):
-                state1, state2 = states_to_compare[i], states_to_compare[i + 1]
+            # Check if the foil exists in the dataframe for both states to avoid errors
+            before_foils = df[df['STATE'] == before_state]['FOIL'].unique()
+            after_foils = df[df['STATE'] == after_state]['FOIL'].unique()
 
-                before = self.Plotter.create_FM_position_plot(state1,foil)
-                after = self.Plotter.create_FM_position_plot(state2,foil)
-                generated_FM_changed_plots = self.Plotter.create_FM_change_plots(foil, state1, state2)
-                added,removed,stayed  = generated_FM_changed_plots
-                summary = self.Plotter.create_changed_summary_plot(before,after,added,removed,stayed,foil,state1,state2)
-                combined = self.ImageProcesser._combine_image_grid(before[0],after[0], summary,added[0],removed[0],stayed[0])
-                self.ImageProcesser._save_image_to_folder(save_folder,combined,foil+' '+ state1+" to "+state2 + ' summary')
+            if foil not in before_foils or foil not in after_foils:
+                print(f"Warning: Foil '{foil}' not found in both states. Skipping comparison for this foil.")
+                continue
+
+            print(f"Comparing foil '{foil}' from '{before_state}' to '{after_state}'")
+            
+            before = self.Plotter.create_FM_position_plot(before_state, foil)
+            after = self.Plotter.create_FM_position_plot(after_state, foil)
+            generated_FM_changed_plots = self.Plotter.create_FM_change_plots(foil, before_state, after_state)
+            added, removed, stayed = generated_FM_changed_plots
+            summary = self.Plotter.create_changed_summary_plot(before, after, added, removed, stayed, foil, before_state, after_state)
+            combined = self.ImageProcesser._combine_image_grid(before[0], after[0], summary, added[0], removed[0], stayed[0])
+            self.ImageProcesser._save_image_to_folder(save_folder, combined, f'{foil} {before_state} to {after_state} summary')
 
 
     def plot_FM_summary(self):
