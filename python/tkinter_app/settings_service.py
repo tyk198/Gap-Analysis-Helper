@@ -95,17 +95,6 @@ class SettingsService:
         
         if isinstance(widget, tk.Entry):
             text = widget.get()
-            if (hasattr(field_type, '__origin__') and field_type.__origin__ is list) or field_type is list:
-                items = []
-                for item in text.split(','):
-                    item = item.strip()
-                    if item:
-                        try:
-                            items.append(int(item))
-                        except ValueError:
-                            pass
-                return items
-
             if field_type is int:
                 try: return int(text)
                 except (ValueError, TypeError): return 0

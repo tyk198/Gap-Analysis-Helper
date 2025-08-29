@@ -135,4 +135,3 @@ class MasterSettings:
         default_factory=PlotterSettings,
         metadata={"visible_in_ui": False}
     )
-
