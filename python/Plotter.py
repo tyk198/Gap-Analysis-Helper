@@ -3,7 +3,7 @@ from matplotlib.lines import Line2D
 from matplotlib import pyplot as plt
 import cv2
 from scipy.spatial import KDTree
-from app.settings import PlotterSettings
+from tkinter_app.settings import PlotterSettings
 
 
 class Plotter:
@@ -126,9 +126,9 @@ class Plotter:
         Returns the added, removed, and stayed points as three separate DataFrames.
         """
         names_to_filter = name_filter if isinstance(name_filter, list) else [name_filter]
-        data_before = self.data[(self.data['NAME'].isin(names_to_filter)) & (self.data['STATE'] == state_before)].copy()
-        data_after = self.data[(self.data['NAME'].isin(names_to_filter)) & (self.data['STATE'] == state_after)].copy()
-        exact_match_keys = ['NAME', 'TOP BOTTOM']
+        data_before = self.data[(self.data['FOIL'].isin(names_to_filter)) & (self.data['STATE'] == state_before)].copy()
+        data_after = self.data[(self.data['FOIL'].isin(names_to_filter)) & (self.data['STATE'] == state_after)].copy()
+        exact_match_keys = ['FOIL', 'TOP BOTTOM']
         matched_before_indices = set()
         matched_after_indices = set()
         grouped_before = data_before.groupby(exact_match_keys)

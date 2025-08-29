@@ -1,8 +1,29 @@
 {
     "Dakar": {
-        "data": "C:/Users/User/OneDrive/Documents",
-        "foils_to_plot": {},
-        "analysis_name": "Run1",
+        "data": "C:/Users/E1009132/Documents/MyDocument/Data_analysis/Gap-Analysis-Helper/Data/Control vs Best",
+        "foils_to_plot": {
+            "AfterCutState": [
+                "ABFoil1",
+                "ABFoil2",
+                "ABFoil4",
+                "ABFoil5",
+                "AFoil1",
+                "AFoil2",
+                "AFoil4",
+                "AFoil5"
+            ],
+            "BeforeCutState": [
+                "ABFoil1",
+                "ABFoil2",
+                "ABFoil4",
+                "ABFoil5",
+                "AFoil1",
+                "AFoil2",
+                "AFoil4",
+                "AFoil5"
+            ]
+        },
+        "analysis_name": "Before after cut analysis",
         "save_folder": "result",
         "image_width": "66320",
         "image_height": "55080",
@@ -13,7 +34,7 @@
         }
     },
     "plotter": {
-        "background_image_path": "data/original_resize.jpg",
+        "background_image_path": "background.jpg",
         "figure": {
             "figsize": [
                 17,

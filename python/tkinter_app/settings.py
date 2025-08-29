@@ -1,19 +1,5 @@
 from dataclasses import dataclass, field
 from typing import Dict, Any,List
-import os 
-import json
-from dacite import from_dict, Config
-from dataclasses import fields, is_dataclass, asdict
-
-
-@dataclass
-class crop_FM_classify_top_bottom_Settings:
-
-
-    excluded_fovs: List = field(
-        default_factory=lambda: [25, 26, 29, 30],
-        metadata={"tooltip": "List of FOV numbers to exclude", "label": "Excluded FOVs"}
-    )
 
 
 @dataclass
@@ -72,15 +58,18 @@ class DakarSettings:
         metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size", "layout_group": "fm_size"}
     )
 
-    crop_FM_classify_top_bottom :crop_FM_classify_top_bottom_Settings = field(
-        default_factory=crop_FM_classify_top_bottom_Settings,
-        metadata={"label": "Crop for Top/Bottom Classification"}
+    states_to_compare : Dict =  field(
+        default_factory=dict,
+        metadata={"label": "State to compare", "widget_type": "state_selector", "layout_group": "left"}
     )
+
+
+
 
 @dataclass
 class PlotterSettings:
     background_image_path: str = field(
-        default='data/original_resize.jpg',
+        default='background.jpg',
         metadata={
             "tooltip": "Path to the background image for plots", 
             "setting_type": "file",
@@ -147,27 +136,3 @@ class MasterSettings:
         metadata={"visible_in_ui": False}
     )
 
-def load_from_json(file_path: str) -> MasterSettings:
-    """Loads settings from a JSON file and returns a new MasterSettings instance."""
-    try:
-        with open(file_path, 'r') as f:
-            data = json.load(f)
-        print(f"Successfully loaded settings from {file_path}")
-    except FileNotFoundError:
-        print("settings file not found, use default settings")
-        return MasterSettings()
-    except json.JSONDecodeError:
-        print(f"Error decoding JSON from {file_path}, using default settings instead.")
-        return MasterSettings()
-    
-    def create_from_dict(cls, data_dict):
-        field_names = {f.name for f in fields(cls)}
-        filtered_.data = {k: v for k, v in data_dict.items() if k in field_names}
-        
-        for f in fields(cls):
-            if is_dataclass(f.type) and f.name in filtered_data:
-                filtered_data[f.name] = create_from_dict(f.type, filtered_data[f.name])
-        
-        return cls(**filtered_data)
-
-    return create_from_dict(MasterSettings, data)

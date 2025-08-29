@@ -1,8 +1,7 @@
 
 from datetime import datetime
 from Dakar import Dakar
-from app.settings_service import SettingsService
-#from app.settings import load_from_json
+from tkinter_app.settings_service import SettingsService
 
 def main():
     settings_service = SettingsService()
@@ -10,12 +9,12 @@ def main():
     dakar = Dakar(settings)
 
     start_time = datetime.now()
-    dakar.combine_csv()
-    dakar.crop_FM_classify_top_bottom_from_excel(start_row=0, end_row=None)
+    #dakar.combine_csv()
+    #dakar.crop_FM_classify_top_bottom_from_excel(start_row=187, end_row=501)
 
     #dakar.crop_FM_check_background_fm()
 
-    #dakar.plot_compare_FM_summary()
+    dakar.plot_compare_FM_summary()
     #dakar.plot_FM_summary()
 
 

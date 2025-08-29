@@ -13,7 +13,7 @@ class MainWindow(tk.Tk):
         self.settings_service = SettingsService()
         self.ui_builder = SettingsUIBuilder()
 
-        self.settings = self.settings_service.load_from_json("python/app/tkinter/settings.json")
+        self.settings = self.settings_service.load_from_json("python/tkinter_app/settings.json")
 
         self.main_frame = tk.Frame(self)
         self.main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -47,7 +47,7 @@ class MainWindow(tk.Tk):
         print("Settings saved successfully.")
 
     def load_settings(self):
-        self.settings = self.settings_service.load_from_json("python/app/tkinter/settings.json")
+        self.settings = self.settings_service.load_from_json("python/tkinter_app/settings.json")
         # Rebuild the UI with the new settings
         for widget in self.main_frame.winfo_children():
             widget.destroy()

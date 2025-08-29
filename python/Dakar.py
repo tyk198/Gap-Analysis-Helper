@@ -1,5 +1,5 @@
 import pandas as pd
-from app.settings import MasterSettings
+from tkinter_app.settings import MasterSettings
 from ImageProcesser import ImageProcesser
 from Plotter import Plotter
 import os
@@ -104,15 +104,15 @@ class Dakar:
         save_folder = os.path.join(self.save_folder,"Combined white and red images")
         os.makedirs(save_folder, exist_ok=True)
 
-        excluded_fovs = self.settings.Dakar.crop_FM_classify_top_bottom.excluded_fovs
-        
-        df_slice = df.iloc[start_row:end_row]
-        mask_fov = ~df_slice['FOV NUMBER'].isin(excluded_fovs)
-        df_to_process = df_slice[mask_fov].copy()  # Avoid SettingWithCopyWarning
+        df_to_process = df.iloc[start_row:end_row]
         
         hyperlink_header = "WHITE RED IMAGE HYPERLINK"
-        df_to_process[hyperlink_header] = ''
-        df_to_process["TOP BOTTOM"] = ''
+        if hyperlink_header not in df_to_process.columns:
+            df_to_process[hyperlink_header] = ''
+
+        if "TOP BOTTOM" not in df_to_process.columns:
+            df_to_process["TOP BOTTOM"] = ''
+
 
         states = df_to_process['STATE'].unique()
         
@@ -159,7 +159,6 @@ class Dakar:
         print(f"Successfully created Excel file with hyperlinks at '{self.excel_path}'")
 
 
-
     def crop_FM_check_background_fm(self):
         """
         Crops and classifies images based on data from the combined CSV file, iterating through states and foils.
@@ -192,8 +191,10 @@ class Dakar:
                 images = self.ImageProcesser._match_all_name_white_images(
                     state,  fov_number, self.raw_image_folder_path
                 )
+                #print(images)
                 if images:
                     img  = self.ImageProcesser._read_image(images)
+
                     for index, row in matching_rows.iterrows():
                         fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["FOIL"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"])
                         
@@ -218,19 +219,20 @@ class Dakar:
         print(f"Successfully created Excel file with hyperlinks at '{self.excel_path}'")
 
 
-
     def plot_compare_FM_summary(self):
-        df = pd.read_excel(self.excel_path)
 
+        df = pd.read_excel(self.excel_path)
         self.Plotter = Plotter(df,self.settings.plotter)
+        self.ImageProcesser = ImageProcesser(df)
 
         save_folder = os.path.join(self.save_folder,"Plot compare FM summary")
         os.makedirs(save_folder, exist_ok=True)
 
+        states_to_compare = self.settings.Dakar.states_to_compare
+        states_to_compare = ["BeforeCutState","AfterCutState"]
 
-        states_to_compare = self.settings.Dakar.plot_compare_FM_summary.states_to_compare
 
-        foils_to_plot = self.data['FOIL'].unique()
+        foils_to_plot = df['FOIL'].unique()
         for foil in foils_to_plot:
             for i in range(len(states_to_compare) - 1):
                 state1, state2 = states_to_compare[i], states_to_compare[i + 1]
@@ -242,6 +244,7 @@ class Dakar:
                 summary = self.Plotter.create_changed_summary_plot(before,after,added,removed,stayed,foil,state1,state2)
                 combined = self.ImageProcesser._combine_image_grid(before[0],after[0], summary,added[0],removed[0],stayed[0])
                 self.ImageProcesser._save_image_to_folder(save_folder,combined,foil+' '+ state1+" to "+state2 + ' summary')
+
 
     def plot_FM_summary(self):
 
