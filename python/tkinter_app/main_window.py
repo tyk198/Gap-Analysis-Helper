@@ -94,16 +94,36 @@ class MainWindow(tk.Tk):
                 elif manager == "pack":
                     combo.pack(**geom_info)
                 self.widget_map[key] = combo
-        # Update dropdown options once conversion is done.
+        # Update dropdown options and set initial values
         self.update_state_dropdowns()
 
     def update_state_dropdowns(self):
-        """Update dropdown values based on foil selections in settings."""
-        available_states = [state for state, checked in self.settings.Dakar.foils_to_plot.items() if checked]
-        if "MasterSettings.Dakar.before_state" in self.widget_map:
-            self.widget_map["MasterSettings.Dakar.before_state"]['values'] = available_states
-        if "MasterSettings.Dakar.after_state" in self.widget_map:
-            self.widget_map["MasterSettings.Dakar.after_state"]['values'] = available_states
+        """Update dropdown values based on foil selections and set initial values from settings."""
+        foils_selector = self.widget_map.get("MasterSettings.Dakar.foils_to_plot")
+        if foils_selector:
+            selections = foils_selector.get_selected_as_dict()
+            # Only include states with at least one checked subfolder
+            available_states = [state for state, subfolders in selections.items() if subfolders]
+            # Map keys to settings values
+            key_to_setting = {
+                "MasterSettings.Dakar.before_state": self.settings.Dakar.before_state,
+                "MasterSettings.Dakar.after_state": self.settings.Dakar.after_state
+            }
+            for key in ["MasterSettings.Dakar.before_state", "MasterSettings.Dakar.after_state"]:
+                if key in self.widget_map:
+                    current_value = key_to_setting.get(key, "")
+                    self.widget_map[key]['values'] = available_states
+                    # Set the dropdown to the loaded setting value if valid, otherwise clear
+                    if current_value in available_states:
+                        self.widget_map[key].set(current_value)
+                    else:
+                        self.widget_map[key].set("")
+        else:
+            # If no foils_selector, clear dropdowns
+            for key in ["MasterSettings.Dakar.before_state", "MasterSettings.Dakar.after_state"]:
+                if key in self.widget_map:
+                    self.widget_map[key]['values'] = []
+                    self.widget_map[key].set("")
 
     def run_dakar_function(self):
         selected_function_name = self.selected_function.get()
@@ -126,7 +146,8 @@ class MainWindow(tk.Tk):
                     if not before_state or not after_state:
                         print("Please select both before and after states.")
                         return
-                    method_to_call(before_state, after_state)
+                    # Call without passing arguments since method uses settings directly
+                    method_to_call()
                 else:
                     method_to_call()
                 print(f"Successfully finished running {selected_function_name}.")
@@ -142,6 +163,7 @@ class MainWindow(tk.Tk):
         if data_path_widget and foils_selector:
             initial_path = data_path_widget.get()
             initial_selections = self.settings.Dakar.foils_to_plot
+            foils_selector.on_selection_change = self.update_state_dropdowns
             foils_selector.set_data_path(initial_path, initial_selections)
 
             data_path_widget.command = lambda path: foils_selector.set_data_path(path, {})
@@ -154,9 +176,9 @@ class MainWindow(tk.Tk):
     def load_settings(self):
         self.settings = self.settings_service.load_from_json("python/tkinter_app/settings.json")
         # Rebuild the UI with the new settings
-        for widget in self.main_frame.winfo_children():
+        for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
-        self.widget_map = self.ui_builder.build_ui(self.settings, self.main_frame)
+        self.widget_map = self.ui_builder.build_ui(self.settings, self.scrollable_frame)
         self._connect_dependent_widgets()
         print("Settings loaded successfully.")
 

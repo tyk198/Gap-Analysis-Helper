@@ -1,7 +1,7 @@
 {
     "Dakar": {
         "data": "C:/Users/E1009132/Documents/MyDocument/Data_analysis/Gap-Analysis-Helper/Data/Control vs Best",
-        "analysis_name": "testing6",
+        "analysis_name": "testing8",
         "save_folder": "result",
         "min_fm_size": 100,
         "max_fm_size": 700,
@@ -11,9 +11,6 @@
         "foils_to_plot": {
             "AfterCutState": [
                 "ABFoil1"
-            ],
-            "BFoil_AfterFVI": [
-                "1_S1"
             ],
             "BeforeCutState": [
                 "ABFoil1"

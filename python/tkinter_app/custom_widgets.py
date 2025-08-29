@@ -40,30 +40,18 @@ class PathSelectorWidget(tk.Frame):
 
 class FoilsSelectorWidget(tk.Frame):
     """A tree-based widget to select folders and subfolders."""
-    def __init__(self, parent, checked_char="\u2713", unchecked_char=""):
+    def __init__(self, parent, checked_char="\u2713", unchecked_char="", on_selection_change=None):
         super().__init__(parent)
         self._data_path = ""
         self._is_populating = False
         self.checked_char = checked_char
         self.unchecked_char = unchecked_char
+        self.on_selection_change = on_selection_change  # Callback for selection changes
 
         self.tree = ttk.Treeview(self, show="tree")
         self.tree.pack(fill=tk.BOTH, expand=True)
 
         self.tree.bind("<Button-1>", self.on_click)
-
-    def on_click(self, event):
-        item_id = self.tree.identify_row(event.y)
-        if item_id:
-            text = self.tree.item(item_id, "text")
-            if text.startswith(f"[{self.unchecked_char}] "):
-                self.tree.item(item_id, text=f"[{self.checked_char}] " + text[4:])
-            elif text.startswith(f"[{self.checked_char}] "):
-                self.tree.item(item_id, text=f"[{self.unchecked_char}] " + text[4:])
-
-    def set_data_path(self, path: str, selections: dict):
-        self._data_path = path
-        self.populate_tree(selections)
 
     def on_click(self, event):
         item_id = self.tree.identify_row(event.y)
@@ -75,6 +63,16 @@ class FoilsSelectorWidget(tk.Frame):
                 self.tree.item(item_id, text=checked_prefix + text[len(unchecked_prefix):])
             elif text.startswith(checked_prefix):
                 self.tree.item(item_id, text=unchecked_prefix + text[len(checked_prefix):])
+            # Notify of selection change
+            if self.on_selection_change:
+                self.on_selection_change()
+
+    def set_data_path(self, path: str, selections: dict):
+        self._data_path = path
+        self.populate_tree(selections)
+        # Notify of initial population
+        if self.on_selection_change:
+            self.on_selection_change()
 
     def populate_tree(self, selections: dict):
         self._is_populating = True
