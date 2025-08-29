@@ -164,10 +164,7 @@ class Dakar:
     def crop_FM_check_background_fm(self):
         """
         Crops and classifies images based on data from the combined CSV file, iterating through states and foils.
-        
-        Args:
-            start_row (int): Starting row index for CSV processing.
-            end_row (int, optional): Ending row index for CSV processing. Defaults to None (process all rows).
+        This version is optimized to reduce memory usage by reading and processing one image at a time.
         """
         save_folder = os.path.join(self.save_folder,"Combined different foil images")
         os.makedirs(save_folder, exist_ok=True)
@@ -177,11 +174,11 @@ class Dakar:
 
         if self.settings.Dakar.show_hyperlink:
             hyperlink_header = "DIFFERENT FOIL COMBINED HYPERLINK "
-            df[hyperlink_header] = ''
+            if hyperlink_header not in df.columns:
+                df[hyperlink_header] = ''
 
         df_to_process = df[df['TOP BOTTOM'].isin(['top', 'bottom'])]
         states = df_to_process['STATE'].unique()
-        
         
         for state in states:
             state_df = df_to_process[df_to_process['STATE'] == state]
@@ -191,17 +188,40 @@ class Dakar:
             for fov_number in fov_numbers:
                 matching_rows = state_df[state_df['FOV NUMBER'] == fov_number]
                 
-                images = self.ImageProcesser._match_all_name_white_images(
+                image_paths = self.ImageProcesser._match_all_name_white_images(
                     state,  fov_number, self.raw_image_folder_path
                 )
-                if images:
-                    img  = self.ImageProcesser._read_image(images)
+                image_paths = image_paths[:4] # Limit to a maximum of 4 images
 
+                if image_paths:
                     for index, row in matching_rows.iterrows():
                         fm_size,x,y,state,name,fov,fov_number,row_id = row['FM SIZE'],row['POS X'],row['POS Y'],row['STATE'],row["FOIL"],row["FOV"],row["FOV NUMBER"],str(row["ROW ID"])
                         
-                        cropped_img   = self.ImageProcesser._crop_image_base_on_coordinate(img,x,y,fm_size*3)
-                        combined_img = self.ImageProcesser._combine_image(*cropped_img,direction = "horizontal")
+                        cropped_parts = []
+                        for image_path in image_paths:
+                            try:
+                                # Read one image at a time to save memory
+                                single_img_list = self.ImageProcesser._read_image([image_path])
+                                if not single_img_list:
+                                    print(f"Warning: Could not read image {image_path}")
+                                    continue
+                                single_img = single_img_list[0]
+                                
+                                # Crop the single loaded image
+                                cropped_part_list = self.ImageProcesser._crop_image_base_on_coordinate([single_img], x, y, fm_size * 3)
+                                if not cropped_part_list:
+                                    print(f"Warning: Could not crop image {image_path}")
+                                    continue
+                                cropped_parts.append(cropped_part_list[0])
+                            except Exception as e:
+                                print(f"An error occurred while processing {image_path} for row {row_id}: {e}")
+                        
+                        if not cropped_parts:
+                            print(f"Skipping row {row_id} as no images could be cropped.")
+                            continue
+
+                        # Combine the collected cropped parts
+                        combined_img = self.ImageProcesser._combine_image(*cropped_parts, direction="horizontal")
                         combined_img = self.ImageProcesser._resize_keep_aspect(combined_img)
                     
                         title_string = f'{row_id}_{state}_{name}\nFOV Number: {fov_number}\nx: {x} y: {y}\nFMsize: {fm_size}'
@@ -214,9 +234,8 @@ class Dakar:
                         if self.settings.Dakar.show_hyperlink:
                             image_absolute_path = os.path.abspath(image_absolute_path + ".png")
                             df.loc[index, hyperlink_header] = f'=HYPERLINK("{image_absolute_path}", "View")'
-
                 else:
-                    print(f"Skipping row {row_id}: Images not found (White: {images})")
+                    print(f"Skipping FOV {fov_number} in state {state}: No images found.")
                         
         df.to_excel(self.excel_path, index=False, engine='openpyxl')
         print(f"Successfully created Excel file with hyperlinks at '{self.excel_path}'")
