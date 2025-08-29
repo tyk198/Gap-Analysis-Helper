@@ -117,17 +117,60 @@ class FoilsSelectorWidget(tk.Frame):
                 selections[parent_name] = selected_subfolders
         return selections
 
-    def get_selected_as_dict(self) -> dict:
-        selections = {}
-        for parent_item in self.tree.get_children():
-            parent_name = self.tree.item(parent_item, "text")
-            selected_subfolders = []
-            for child_item in self.tree.get_children(parent_item):
-                text = self.tree.item(child_item, "text")
-                if text.startswith(f"[{self.checked_char}]"):
-                    selected_subfolders.append(text[4:])
-            if selected_subfolders:
-                selections[parent_name] = selected_subfolders
+class StateSelectorWidget(tk.Frame):
+    """A tree-based widget to select folders."""
+    def __init__(self, parent, checked_char="\u2713", unchecked_char=""):
+        super().__init__(parent)
+        self._data_path = ""
+        self._is_populating = False
+        self.checked_char = checked_char
+        self.unchecked_char = unchecked_char
+
+        self.tree = ttk.Treeview(self, show="tree")
+        self.tree.pack(fill=tk.BOTH, expand=True)
+
+        self.tree.bind("<Button-1>", self.on_click)
+
+    def on_click(self, event):
+        item_id = self.tree.identify_row(event.y)
+        if item_id:
+            text = self.tree.item(item_id, "text")
+            if text.startswith(f"[{self.unchecked_char}] "):
+                self.tree.item(item_id, text=f"[{self.checked_char}] " + text[4:])
+            elif text.startswith(f"[{self.checked_char}] "):
+                self.tree.item(item_id, text=f"[{self.unchecked_char}] " + text[4:])
+
+    def set_data_path(self, path: str, selections: list):
+        self._data_path = path
+        self.populate_tree(selections)
+
+    def populate_tree(self, selections: list):
+        self._is_populating = True
+        self.tree.delete(*self.tree.get_children())
+        if not self._data_path or not os.path.isdir(self._data_path):
+            self._is_populating = False
+            return
+
+        unchecked_prefix = f"[{self.unchecked_char}] "
+        checked_prefix = f"[{self.checked_char}] "
+
+        for folder_name in sorted(os.listdir(self._data_path)):
+            folder_path = os.path.join(self._data_path, folder_name)
+            if os.path.isdir(folder_path):
+                if folder_name in selections:
+                    self.tree.insert("", tk.END, text=checked_prefix + folder_name)
+                else:
+                    self.tree.insert("", tk.END, text=unchecked_prefix + folder_name)
+        
+        self._is_populating = False
+
+    def get_selected_as_list(self) -> list:
+        selections = []
+        for item in self.tree.get_children():
+            text = self.tree.item(item, "text")
+            checked_prefix = f"[{self.checked_char}] "
+            if text.startswith(checked_prefix):
+                selections.append(text[len(checked_prefix):])
         return selections
 
 class CollapsibleSection(tk.Frame):

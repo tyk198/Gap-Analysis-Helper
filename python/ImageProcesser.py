@@ -19,32 +19,6 @@ class ImageProcesser:
             raw_image_folder_path: Path to raw images provided by owner class
         """
         
-    @staticmethod
-    #@log_time
-    def _read_image(file_path: Union[str, List[str]]) -> Union[np.ndarray, List[np.ndarray]]:
-        """
-        Reads an image or a list of images from the specified path(s) using OpenCV.
-
-        Images are read in BGR color format and returned as numpy arrays.
-
-        Parameters:
-            file_path (str | List[str]): A single path to an image or a list of paths.
-
-        Returns:
-            np.ndarray | List[np.ndarray]: The loaded image or a list of loaded images in numpy format.
-        """
-        if isinstance(file_path, str):
-            img = cv2.imread(file_path)
-            if img is None:
-                raise ValueError(f"Failed to load image from {file_path}")
-            return img
-        elif isinstance(file_path, list):
-            images = [cv2.imread(path) for path in file_path]
-            if any(img is None for img in images):
-                raise ValueError("Failed to load one or more images from the provided paths")
-            return images
-        else:
-            raise TypeError("file_path must be a string or a list of strings")
     
     @staticmethod
     def _read_image(file_path: Union[str, List[str]]) -> Union[np.ndarray, List[np.ndarray]]:
@@ -71,7 +45,7 @@ class ImageProcesser:
             return img
         elif isinstance(file_path, list):
             # Limit to first 5 paths if more are provided
-            paths_to_read = file_path[:5]
+            paths_to_read = file_path[:4]
             images = [cv2.imread(path) for path in paths_to_read]
             if any(img is None for img in images):
                 raise ValueError("Failed to load one or more images from the provided paths")

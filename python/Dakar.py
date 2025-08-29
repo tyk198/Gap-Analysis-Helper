@@ -191,7 +191,8 @@ class Dakar:
                 images = self.ImageProcesser._match_all_name_white_images(
                     state,  fov_number, self.raw_image_folder_path
                 )
-                #print(images)
+                print(images)
+                print(f'The images is {images}')
                 if images:
                     img  = self.ImageProcesser._read_image(images)
 

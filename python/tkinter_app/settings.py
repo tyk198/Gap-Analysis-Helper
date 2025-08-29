@@ -10,15 +10,10 @@ class DakarSettings:
         metadata={
             "tooltip": "Folder path containing all the necceasry images and csv files needed for analysis",
             "setting_type": "folder",
-            "label": "Raw Data Folder",
-            "layout_group": "left",
+            "label": "",
+            "layout_group": "row3_left",
             "widget_style": "icon_only"
         }
-    )
-
-    foils_to_plot : Dict =  field(
-        default_factory=dict,
-        metadata={"label": "Foils to Plot", "widget_type": "foils_selector", "layout_group": "left"}
     )
 
     analysis_name: str = field(
@@ -26,7 +21,7 @@ class DakarSettings:
         metadata={
             "tooltip": "The analysis name", 
             "label": "Analysis name",
-            "layout_group": "right"
+            "layout_group": "row1"
         }
     )
 
@@ -36,31 +31,36 @@ class DakarSettings:
             "tooltip": "Folder for all  the combined images, and plotted summary of analysis", 
             "setting_type": "folder",
             "label": "Result folder",
-            "layout_group": "right"
+            "layout_group": "row1"
         }
-    )
-
-    image_width: str = field(
-        default=66320,
-        metadata={"tooltip": "The width of image", "label": "Image Width", "layout_group": "image_size"}
-    )
-    image_height: str = field(
-        default=55080,
-        metadata={"tooltip": "The height of image", "label": "Image Height", "layout_group": "image_size"}
     )
 
     min_fm_size: int = field(
         default=100,
-        metadata={"tooltip": "Minimum FM size to filter", "label": "Min FM Size", "layout_group": "fm_size"}
+        metadata={"tooltip": "Minimum FM size to filter", "label": "Min FM Size", "layout_group": "row1"}
     )
     max_fm_size: int = field(
         default=700,
-        metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size", "layout_group": "fm_size"}
+        metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size", "layout_group": "row1"}
+    )
+
+    image_width: str = field(
+        default=66320,
+        metadata={"tooltip": "The width of image", "label": "Image Width", "layout_group": "row2", "visible_in_ui": False}
+    )
+    image_height: str = field(
+        default=55080,
+        metadata={"tooltip": "The height of image", "label": "Image Height", "layout_group": "row2", "visible_in_ui": False}
+    )
+
+    foils_to_plot : Dict =  field(
+        default_factory=dict,
+        metadata={"label": "Foils to Plot", "widget_type": "foils_selector", "layout_group": "row3_left"}
     )
 
     states_to_compare : Dict =  field(
         default_factory=dict,
-        metadata={"label": "State to compare", "widget_type": "state_selector", "layout_group": "left"}
+        metadata={"label": "State to compare", "widget_type": "state_selector", "layout_group": "row3_right"}
     )
 
 

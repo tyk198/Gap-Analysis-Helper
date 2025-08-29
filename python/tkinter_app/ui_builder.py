@@ -19,6 +19,70 @@ class SettingsUIBuilder:
     def _create_ui_from_dataclass(self, dc_instance: Any, parent: tk.Frame, base_key: str, level: int):
         """Recursively generates UI elements for a dataclass instance."""
         
+        if base_key == "MasterSettings.Dakar":
+            # Special layout for Dakar Settings
+            dakar_frame = parent
+            
+            # Row 1
+            row1_frame = tk.Frame(dakar_frame)
+            row1_frame.pack(fill=tk.X, padx=5, pady=5)
+            
+            # Row 2
+            row2_frame = tk.Frame(dakar_frame)
+            row2_frame.pack(fill=tk.X, padx=5, pady=5)
+
+            # Row 3
+            row3_frame = tk.Frame(dakar_frame)
+            row3_frame.pack(fill=tk.X, padx=5, pady=5)
+            row3_left_frame = tk.Frame(row3_frame)
+            row3_left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
+            row3_right_frame = tk.Frame(row3_frame)
+            row3_right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5)
+
+            field_groups = {
+                "row1": row1_frame,
+                "row2": row2_frame,
+                "row3_left": row3_left_frame,
+                "row3_right": row3_right_frame
+            }
+
+            for f in fields(dc_instance):
+                if not f.metadata.get("visible_in_ui", True):
+                    continue
+
+                layout_group = f.metadata.get("layout_group")
+                target_frame = field_groups.get(layout_group)
+
+                if target_frame:
+                    key = f"{base_key}.{f.name}"
+                    value = getattr(dc_instance, f.name)
+                    setting_type = f.metadata.get("setting_type")
+                    widget_type = f.metadata.get("widget_type")
+                    widget_style = f.metadata.get("widget_style")
+                    label_text = f.metadata.get("label", f.name)
+
+                    if widget_style == "icon_only":
+                        # Special case for the folder picker button
+                        widget = self._create_widget_for_value(target_frame, value, setting_type, widget_type, widget_style)
+                        widget.pack(side=tk.LEFT, anchor='nw')
+                        self.widget_map[key] = widget
+                    elif widget_type in ["foils_selector", "state_selector"]:
+                        label = tk.Label(target_frame, text=f"{label_text}:")
+                        label.pack(side=tk.TOP, anchor='w')
+                        widget = self._create_widget_for_value(target_frame, value, setting_type, widget_type, widget_style)
+                        widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+                        self.widget_map[key] = widget
+                    else:
+                        cell_frame = tk.Frame(target_frame)
+                        cell_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+                        label = tk.Label(cell_frame, text=f"{label_text}:")
+                        label.pack(side=tk.TOP, anchor='w')
+                        widget = self._create_widget_for_value(cell_frame, value, setting_type, widget_type, widget_style)
+                        widget.pack(side=tk.TOP, fill=tk.X, expand=True)
+                        self.widget_map[key] = widget
+            return
+
+        # Default layout for other dataclasses
         main_frame = tk.Frame(parent)
         main_frame.pack(fill=tk.X)
 
@@ -46,9 +110,16 @@ class SettingsUIBuilder:
                 value = getattr(dc_instance, f.name)
                 label_text = f.metadata.get("label", f.name)
 
-                section = CollapsibleSection(parent, label_text)
-                section.pack(fill=tk.X, padx=5, pady=5)
-                self._create_ui_from_dataclass(value, section.contentLayout(), key, level + 1)
+                if base_key == "MasterSettings" and f.name == "Dakar":
+                    s = ttk.Style()
+                    s.configure('Dark.TLabelframe.Label', background='#D0D0D0')
+                    section = ttk.LabelFrame(parent, text=label_text, style='Dark.TLabelframe')
+                    section.pack(fill=tk.X, padx=5, pady=5)
+                    self._create_ui_from_dataclass(value, section, key, level + 1)
+                else:
+                    section = CollapsibleSection(parent, label_text)
+                    section.pack(fill=tk.X, padx=5, pady=5)
+                    self._create_ui_from_dataclass(value, section.contentLayout(), key, level + 1)
             else:
                 key = f"{base_key}.{f.name}"
                 value = getattr(dc_instance, f.name)

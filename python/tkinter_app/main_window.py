@@ -1,48 +1,4 @@
 import tkinter as tk
-
-from .settings import MasterSettings
-from .settings_service import SettingsService
-from .ui_builder import SettingsUIBuilder
-
-class MainWindow(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Gap Analysis Helper")
-        self.geometry("800x600")
-
-        self.settings_service = SettingsService()
-        self.ui_builder = SettingsUIBuilder()
-
-        self.settings = self.settings_service.load_from_json("python/tkinter_app/settings.json")
-
-        self.main_frame = tk.Frame(self)
-        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-        self.widget_map = self.ui_builder.build_ui(self.settings, self.main_frame)
-        self._connect_dependent_widgets()
-
-        self.button_frame = tk.Frame(self)
-        self.button_frame.pack(fill=tk.X, padx=10, pady=5)
-
-        self.save_button = tk.Button(self.button_frame, text="Save Settings", command=self.save_settings)
-        self.save_button.pack(side=tk.RIGHT, padx=5)
-
-        self.load_button = tk.Button(self.button_frame, text="Load Settings", command=self.load_settings)
-        self.load_button.pack(side=tk.RIGHT)
-
-    def _connect_dependent_widgets(self):
-        data_path_widget = self.widget_map.get("MasterSettings.Dakar.data")
-        foils_selector = self.widget_map.get("MasterSettings.Dakar.foils_to_plot")
-
-        if data_path_widget and foils_selector:
-            initial_path = data_path_widget.get()
-            initial_selections = self.settings.Dakar.foils_to_plot
-            foils_selector.set_data_path(initial_path, initial_selections)
-
-            data_path_widget.command = lambda path: foils_selector.set_data_path(path, {})
-
-    def save_settings(self):
-        import tkinter as tk
 from tkinter import ttk
 from Dakar import Dakar
 
@@ -62,13 +18,29 @@ class MainWindow(tk.Tk):
         self.settings = self.settings_service.load_from_json("python/tkinter_app/settings.json")
         self.dakar = Dakar(self.settings)
 
-        self.main_frame = tk.Frame(self)
-        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.canvas = tk.Canvas(self)
+        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = ttk.Frame(self.canvas)
 
-        self.widget_map = self.ui_builder.build_ui(self.settings, self.main_frame)
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            )
+        )
+
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+
+        self.widget_map = self.ui_builder.build_ui(self.settings, self.scrollable_frame)
         self._connect_dependent_widgets()
 
-        self.functions_frame = ttk.LabelFrame(self, text="Dakar Functions")
+        s = ttk.Style()
+        s.configure('Dark.TLabelframe.Label', background='#D0D0D0')
+        self.functions_frame = ttk.LabelFrame(self.scrollable_frame, text="Dakar Functions", style='Dark.TLabelframe')
         self.functions_frame.pack(fill=tk.X, padx=10, pady=10)
 
         self.selected_function = tk.StringVar()
@@ -80,22 +52,20 @@ class MainWindow(tk.Tk):
             "plot_compare_FM_summary",
             "plot_FM_summary"
         ]
+        
+        radio_button_frame = tk.Frame(self.functions_frame)
+        radio_button_frame.pack(side=tk.LEFT, anchor=tk.NW, padx=10)
 
         for func in functions:
-            rb = ttk.Radiobutton(self.functions_frame, text=func, value=func, variable=self.selected_function)
-            rb.pack(anchor=tk.W, padx=10)
+            rb = ttk.Radiobutton(radio_button_frame, text=func, value=func, variable=self.selected_function)
+            rb.pack(anchor=tk.W)
 
         self.run_button = tk.Button(self.functions_frame, text="Run Function", command=self.run_dakar_function)
-        self.run_button.pack(side=tk.RIGHT, padx=5, pady=5)
+        self.run_button.pack(side=tk.RIGHT, padx=5, pady=5, anchor=tk.SE)
 
-        self.button_frame = tk.Frame(self)
-        self.button_frame.pack(fill=tk.X, padx=10, pady=5)
-
-        self.save_button = tk.Button(self.button_frame, text="Save Settings", command=self.save_settings)
-        self.save_button.pack(side=tk.RIGHT, padx=5)
-
-        self.load_button = tk.Button(self.button_frame, text="Load Settings", command=self.load_settings)
-        self.load_button.pack(side=tk.RIGHT)
+        save_button_frame = self.widget_map.get("MasterSettings.Dakar.states_to_compare").master
+        self.save_button = tk.Button(save_button_frame, text="Save Settings", command=self.save_settings)
+        self.save_button.pack(side=tk.RIGHT, padx=5, anchor=tk.SE)
 
     def run_dakar_function(self):
         selected_function_name = self.selected_function.get()
@@ -143,20 +113,6 @@ class MainWindow(tk.Tk):
             widget.destroy()
         self.widget_map = self.ui_builder.build_ui(self.settings, self.main_frame)
         self._connect_dependent_widgets()
-        print("Settings loaded successfully.")
-
-if __name__ == "__main__":
-    app = MainWindow()
-    app.mainloop()
-    self.settings_service.save_to_json(updated_settings)
-    print("Settings saved successfully.")
-
-    def load_settings(self):
-        self.settings = self.settings_service.load_from_json("python/tkinter_app/settings.json")
-        # Rebuild the UI with the new settings
-        for widget in self.main_frame.winfo_children():
-            widget.destroy()
-        self.widget_map = self.ui_builder.build_ui(self.settings, self.main_frame)
         print("Settings loaded successfully.")
 
 if __name__ == "__main__":
