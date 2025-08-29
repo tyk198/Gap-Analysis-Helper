@@ -72,6 +72,11 @@ class DakarSettings:
         metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size", "layout_group": "fm_size"}
     )
 
+    show_hyperlink: bool = field(
+        default=True,
+        metadata={"visible_in_ui": False}
+    )
+
     crop_FM_classify_top_bottom :crop_FM_classify_top_bottom_Settings = field(
         default_factory=crop_FM_classify_top_bottom_Settings,
         metadata={"label": "Crop for Top/Bottom Classification"}

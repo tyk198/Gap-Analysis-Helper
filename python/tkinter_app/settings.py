@@ -44,6 +44,11 @@ class DakarSettings:
         metadata={"tooltip": "Maximum FM size to filter", "label": "Max FM Size", "layout_group": "row1"}
     )
 
+    show_hyperlink: bool = field(
+        default=False,
+        metadata={"visible_in_ui": False}
+    )
+
     image_width: str = field(
         default=66320,
         metadata={"tooltip": "The width of image", "label": "Image Width", "layout_group": "row2", "visible_in_ui": False}

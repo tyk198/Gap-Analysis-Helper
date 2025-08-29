@@ -106,9 +106,10 @@ class Dakar:
 
         df_to_process = df.iloc[start_row:end_row]
         
-        hyperlink_header = "WHITE RED IMAGE HYPERLINK"
-        if hyperlink_header not in df_to_process.columns:
-            df_to_process[hyperlink_header] = ''
+        if self.settings.Dakar.show_hyperlink:
+            hyperlink_header = "WHITE RED IMAGE HYPERLINK"
+            if hyperlink_header not in df_to_process.columns:
+                df_to_process[hyperlink_header] = ''
 
         if "TOP BOTTOM" not in df_to_process.columns:
             df_to_process["TOP BOTTOM"] = ''
@@ -149,8 +150,9 @@ class Dakar:
 
                             self.ImageProcesser._save_image_to_folder(save_folder,combined_img ,file_name)
 
-                            image_absolute_path = os.path.abspath(image_absolute_path + ".png")
-                            df_to_process.loc[index, hyperlink_header] = f'=HYPERLINK("{image_absolute_path}", "View")'
+                            if self.settings.Dakar.show_hyperlink:
+                                image_absolute_path = os.path.abspath(image_absolute_path + ".png")
+                                df_to_process.loc[index, hyperlink_header] = f'=HYPERLINK("{image_absolute_path}", "View")'
 
                     else:
                         print(f"Skipping row {row_id}: Images not found (White: {white_image}, Red: {red_image})")
@@ -173,8 +175,9 @@ class Dakar:
         df = pd.read_excel(self.excel_path)
         self.ImageProcesser = ImageProcesser(df)
 
-        hyperlink_header = "DIFFERENT FOIL COMBINED HYPERLINK "
-        df[hyperlink_header] = ''
+        if self.settings.Dakar.show_hyperlink:
+            hyperlink_header = "DIFFERENT FOIL COMBINED HYPERLINK "
+            df[hyperlink_header] = ''
 
         df_to_process = df[df['TOP BOTTOM'].isin(['top', 'bottom'])]
         states = df_to_process['STATE'].unique()
@@ -191,8 +194,6 @@ class Dakar:
                 images = self.ImageProcesser._match_all_name_white_images(
                     state,  fov_number, self.raw_image_folder_path
                 )
-                print(images)
-                print(f'The images is {images}')
                 if images:
                     img  = self.ImageProcesser._read_image(images)
 
@@ -210,8 +211,9 @@ class Dakar:
                         image_absolute_path = os.path.join(save_folder, file_name)
                         self.ImageProcesser._save_image_to_folder(save_folder,combined_img ,file_name)
 
-                        image_absolute_path = os.path.abspath(image_absolute_path + ".png")
-                        df.loc[index, hyperlink_header] = f'=HYPERLINK("{image_absolute_path}", "View")'
+                        if self.settings.Dakar.show_hyperlink:
+                            image_absolute_path = os.path.abspath(image_absolute_path + ".png")
+                            df.loc[index, hyperlink_header] = f'=HYPERLINK("{image_absolute_path}", "View")'
 
                 else:
                     print(f"Skipping row {row_id}: Images not found (White: {images})")
@@ -263,4 +265,3 @@ class Dakar:
                 generated_plot = self.Plotter.create_FM_position_plot(state,foil)
                 self.ImageProcesser._save_image_to_folder(save_folder,generated_plot[0],state + " " + foil + ' plot')
                 print(f"Plotted {state} {foil}")
-

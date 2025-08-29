@@ -1,10 +1,11 @@
 {
     "Dakar": {
         "data": "C:/Users/E1009132/Documents/MyDocument/Data_analysis/Gap-Analysis-Helper/Data/Control vs Best",
-        "analysis_name": "testing2",
+        "analysis_name": "testing5",
         "save_folder": "result",
         "min_fm_size": 100,
         "max_fm_size": 700,
+        "show_hyperlink": false,
         "image_width": 66320,
         "image_height": 55080,
         "foils_to_plot": {

@@ -8,6 +8,7 @@
         "image_height": "55080",
         "min_fm_size": 100,
         "max_fm_size": 700,
+        "show_hyperlink": true,
         "crop_FM_classify_top_bottom": {
             "excluded_fovs": []
         }
