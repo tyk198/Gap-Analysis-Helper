@@ -12,12 +12,15 @@
             "AfterCutState": [
                 "ABFoil1"
             ],
+            "BFoil_AfterFVI": [
+                "1_S1"
+            ],
             "BeforeCutState": [
                 "ABFoil1"
             ]
         },
-        "before_state": false,
-        "after_state": false
+        "before_state": "BeforeCutState",
+        "after_state": "AfterCutState"
     },
     "plotter": {
         "background_image_path": "background.jpg",

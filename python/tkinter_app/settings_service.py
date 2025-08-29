@@ -91,7 +91,8 @@ class SettingsService:
         if isinstance(widget, PathSelectorWidget):
             return widget.get()
         if isinstance(widget, ttk.Combobox):
-            return widget.get() == "True"
+            # Return the string value for Combobox, no boolean conversion
+            return widget.get()
         
         if isinstance(widget, tk.Entry):
             text = widget.get()

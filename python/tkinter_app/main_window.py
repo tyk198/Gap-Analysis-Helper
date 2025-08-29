@@ -36,11 +36,18 @@ class MainWindow(tk.Tk):
         self.scrollbar.pack(side="right", fill="y")
 
         self.widget_map = self.ui_builder.build_ui(self.settings, self.scrollable_frame)
-        self._convert_state_fields_to_dropdowns()  # <-- NEW: Convert before/after state fields to dropdowns
+        self._convert_state_fields_to_dropdowns()  # Convert before/after state fields to dropdowns
         self._connect_dependent_widgets()
 
         s = ttk.Style()
         s.configure('Dark.TLabelframe.Label', background='#D0D0D0')
+        
+        # Find the Dakar Settings frame to add the Save button
+        for child in self.scrollable_frame.winfo_children():
+            if isinstance(child, ttk.LabelFrame) and child.cget("text") == "Dakar Settings":
+                self.save_button = tk.Button(child, text="Save Settings", command=self.save_settings)
+                self.save_button.pack(side=tk.BOTTOM, anchor=tk.SE, padx=5, pady=5)
+
         self.functions_frame = ttk.LabelFrame(self.scrollable_frame, text="Dakar Functions", style='Dark.TLabelframe')
         self.functions_frame.pack(fill=tk.X, padx=10, pady=10)
 
@@ -63,9 +70,6 @@ class MainWindow(tk.Tk):
 
         self.run_button = tk.Button(self.functions_frame, text="Run Function", command=self.run_dakar_function)
         self.run_button.pack(side=tk.RIGHT, padx=5, pady=5, anchor=tk.SE)
-
-        self.save_button = tk.Button(self.functions_frame, text="Save Settings", command=self.save_settings)
-        self.save_button.pack(side=tk.RIGHT, padx=5, pady=5, anchor=tk.SE)
 
     def _convert_state_fields_to_dropdowns(self):
         """Replace existing before/after state fields with dropdowns using the same geometry manager."""
@@ -95,7 +99,6 @@ class MainWindow(tk.Tk):
 
     def update_state_dropdowns(self):
         """Update dropdown values based on foil selections in settings."""
-        # Assuming self.settings.Dakar.foils_to_plot is a dict: { state: checked_bool, ... }
         available_states = [state for state, checked in self.settings.Dakar.foils_to_plot.items() if checked]
         if "MasterSettings.Dakar.before_state" in self.widget_map:
             self.widget_map["MasterSettings.Dakar.before_state"]['values'] = available_states
