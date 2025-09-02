@@ -1,12 +1,9 @@
-import pandas as pd
 import numpy as np
 import cv2
 import os
 from typing import Union, List, Optional
 import logging
 import tkinter as tk
-import glob
-#from .decorator import log_time
 
 class ImageProcesser:
     def __init__(self, data):
@@ -54,7 +51,6 @@ class ImageProcesser:
             raise TypeError("file_path must be a string or a list of strings")
 
     @staticmethod
-    #@log_time
     def _combine_image(*images: 'np.ndarray', direction: str = "vertical") -> Optional['np.ndarray']:
         """
         Combines a sequence of images either vertically or horizontally.
@@ -80,7 +76,6 @@ class ImageProcesser:
             logging.error(f"Invalid direction: {direction}. Must be 'vertical' or 'horizontal'.")
             raise ValueError("Direction must be 'vertical' or 'horizontal'.")
 
-        # Validate inputs and convert to 3-channel BGR, find max width or height
         max_width = 0
         max_height = 0
         processed_for_size_check = []
@@ -145,7 +140,6 @@ class ImageProcesser:
         return combined_image
     
     @staticmethod
-    #@log_time
     def _resize_keep_aspect(image, target_width=None):
         """
         Resize an image to a target width while keeping aspect ratio.
@@ -175,7 +169,6 @@ class ImageProcesser:
         return resized_image
     
     @staticmethod
-    #@log_time
     def _overlay_text(text, image, position="top-left"):
         """
         Overlay text on an image with resolution-independent scaling.
@@ -231,7 +224,6 @@ class ImageProcesser:
 
 
     @staticmethod
-    #@log_time
     def _crop_image_base_on_coordinate(
         image_input: Union[np.ndarray, List[np.ndarray]],
         x: float,
@@ -293,7 +285,6 @@ class ImageProcesser:
         else:
             # If the input is a single image, process it directly
             return crop_single_image(image_input)
-
 
     @staticmethod
     def _combine_image_grid(*images: 'np.ndarray') -> Optional['np.ndarray']:
@@ -385,7 +376,6 @@ class ImageProcesser:
         return combined_image
 
     @staticmethod
-    #@log_time
     def _save_image_to_folder(save_folder, plot_image, title):
         """
         Saves a plot image to a specified folder with a dynamically generated filename.
@@ -403,8 +393,6 @@ class ImageProcesser:
         full_path = os.path.join(save_folder, filename)
         cv2.imwrite(full_path, plot_image)
         print(f" Image successfully saved to: {full_path}")
-
-
 
     @staticmethod
     def _show_image(image: 'np.ndarray', window_name: str = "Image Display", wait_time: int = 0, scale_resize = 1) -> None:
@@ -561,7 +549,6 @@ class ImageProcesser:
                 continue
         
         return found_white_path, found_red_path
-
 
     @staticmethod
     def _match_all_name_white_images(state, fov,raw_image_folder_path: str) -> List[str]:

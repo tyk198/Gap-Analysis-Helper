@@ -3,7 +3,6 @@ from tkinter_app.settings import MasterSettings
 from ImageProcesser import ImageProcesser
 from Plotter import Plotter
 import os
-from datetime import datetime
 
 class Dakar:
     """
@@ -16,11 +15,8 @@ class Dakar:
         analysis_name = self.settings.Dakar.analysis_name
         self.save_folder = os.path.join(save_folder,analysis_name)
         os.makedirs(self.save_folder, exist_ok=True)
-
-
         self.excel_file_name =self.settings.Dakar.analysis_name + '.xlsx'
         self.excel_path = os.path.join(self.save_folder,self.excel_file_name)
-
         self.raw_image_folder_path = self.settings.Dakar.data
 
     def combine_csv(self):
