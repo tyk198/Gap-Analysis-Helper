@@ -143,7 +143,6 @@ class Dakar:
                             file_name = row_id + " " + f'{state} {name} FOV Number_{fov_number} X_{x} Y_{y} FMsize_{fm_size}'
                             image_absolute_path = os.path.join(save_folder, file_name)
                             combined_img = self.ImageProcesser._overlay_text(title_string,combined_img,"top-left")
-
                             self.ImageProcesser._save_image_to_folder(save_folder,combined_img ,file_name)
 
                             if self.settings.Dakar.show_hyperlink:
